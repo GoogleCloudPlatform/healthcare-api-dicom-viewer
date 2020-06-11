@@ -1,3 +1,4 @@
+/** @module api */
 import * as auth from './auth.js';
 
 const CLOUD_RESOURCE_MANAGER_API_BASE = 'https://cloudresourcemanager.googleapis.com';
@@ -39,7 +40,7 @@ const authenticatedFetch = async (url) => {
  * @param {Array} projects Projects fetched from a previous iteration
  * @return {Array<string>} List of projects available to the user
  */
-export const fetchProjects = async (pageToken, projects) => {
+const fetchProjects = async (pageToken, projects) => {
   const endpoint = '/v1/projects' +
       (pageToken ? `?pageToken=${pageToken}` : '');
   const response =
@@ -68,7 +69,7 @@ export const fetchProjects = async (pageToken, projects) => {
  * @param {string} projectId Project id to search locations for
  * @return {Array<string>} List of locations available for project
  */
-export const fetchLocations = async (projectId) => {
+const fetchLocations = async (projectId) => {
   const endpoint = `/v1beta1/projects/${projectId}/locations`;
   const response =
     await authenticatedFetch(HEALTHCARE_BETA_API_BASE + endpoint);
@@ -84,7 +85,7 @@ export const fetchLocations = async (projectId) => {
  * @param {string} location Location
  * @return {Array<string>} List of datasets available
  */
-export const fetchDatasets = async (projectId, location) => {
+const fetchDatasets = async (projectId, location) => {
   const endpoint = `/v1/projects/${projectId}/locations/${location}/datasets`;
   const response =
     await authenticatedFetch(HEALTHCARE_API_BASE + endpoint);
@@ -101,7 +102,7 @@ export const fetchDatasets = async (projectId, location) => {
  * @param {string} dataset Dataset
  * @return {Array<string>} List of dicomStores available
  */
-export const fetchDicomStores = async (projectId, location, dataset) => {
+const fetchDicomStores = async (projectId, location, dataset) => {
   const endpoint =
     `/v1/projects/${projectId}/locations/${location}/datasets/${dataset}` +
     `/dicomStores`;
@@ -122,7 +123,7 @@ export const fetchDicomStores = async (projectId, location, dataset) => {
  * @param {string} dicomStore Dicom Store
  * @return {Array<Object>} List of studies in the dicom store
  */
-export const fetchStudies =
+const fetchStudies =
 async (projectId, location, dataset, dicomStore) => {
   const endpoint =
     `/v1/projects/${projectId}/locations/${location}/datasets/${dataset}` +
@@ -143,7 +144,7 @@ async (projectId, location, dataset, dicomStore) => {
  * @param {string} studyId Study UID
  * @return {Array<Object>} List of series in the study
  */
-export const fetchSeries =
+const fetchSeries =
 async (projectId, location, dataset, dicomStore, studyId) => {
   const endpoint =
     `/v1/projects/${projectId}/locations/${location}/datasets/${dataset}` +
@@ -154,3 +155,6 @@ async (projectId, location, dataset, dicomStore, studyId) => {
 
   return data;
 };
+
+export {fetchProjects, fetchLocations, fetchDatasets, fetchDicomStores,
+  fetchStudies, fetchSeries};

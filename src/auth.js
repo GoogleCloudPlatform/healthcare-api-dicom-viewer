@@ -1,8 +1,11 @@
+/** @module auth */
 const CLIENT_ID =
   '485533938322-gvunr02vbvost1od2dsl13d7hv40crrj.apps.googleusercontent.com';
 
-// Redirect to Google Authentication page
-export const signInToGoogle = () => {
+/**
+ * Redirect to Google OAuth2 sign-in page
+ */
+const signInToGoogle = () => {
   // Google's OAuth 2.0 endpoint for requesting an access token
   const oauth2Endpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
 
@@ -36,14 +39,18 @@ export const signInToGoogle = () => {
   form.submit();
 };
 
-// Removes access token
-export const signOut = () => {
+/**
+ * Removes access token from local storage
+ */
+const signOut = () => {
   localStorage.removeItem('oauth2-params');
 };
 
-// Checks if the current url was redirected from Google Authentication
-// and stores the access token if so
-export const storeOAuthUrlParams = () => {
+/**
+ * Checks if the current url was redirected from Google Authentication
+ * and stores the access token if so
+ */
+const storeOAuthUrlParams = () => {
   // Parse query string to see if page request is coming from OAuth 2.0 server.
   const fragmentString = location.hash.substring(1);
   const params = {};
@@ -64,14 +71,19 @@ export const storeOAuthUrlParams = () => {
   window.history.replaceState({}, document.title, '/');
 };
 
-// Retrives the access token from local storage (or null if it doesn't exist)
-export const getAccessToken = () => {
+/**
+ * Retrives the access token from local storage
+ * @return {string} Access token (or null if none present)
+ */
+const getAccessToken = () => {
   const params = JSON.parse(localStorage.getItem('oauth2-params'));
   if (params && params['access_token']) {
     return params['access_token'];
   }
   return null;
 };
+
+export {signInToGoogle, signOut, storeOAuthUrlParams, getAccessToken};
 
 // Run on every page load
 storeOAuthUrlParams();
