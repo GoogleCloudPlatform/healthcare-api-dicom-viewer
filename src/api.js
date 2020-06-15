@@ -8,17 +8,32 @@ const HEALTHCARE_BETA_API_BASE = 'https://content-healthcare.googleapis.com';
 /**
  * Fetches a url using an access token, signing the user in
  * if no access token exists
- * @param {string} url The url to fetch
+ * @param {RequestInfo} input The request info to fetch
+ * @param {RequestInit=} init The request init object
  * @return {Promise<Response>} Fetch response object
  */
-const authenticatedFetch = async (url) => {
+const authenticatedFetch = async (input, init) => {
   const accessToken = auth.getAccessToken();
   if (accessToken) {
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
-    });
+    if (init) {
+      // Add authorization headers to given init object
+      if (init.headers) {
+        init.headers['Authorization'] = `Bearer ${accessToken}`;
+      } else {
+        init.headers = {
+          'Authorization': `Bearer ${accessToken}`,
+        };
+      }
+    } else {
+      // Initialize init object if none was given
+      init = {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      };
+    }
+
+    const response = await fetch(input, init);
 
     if (!response.ok) {
       if (response.status == 401) {
@@ -156,5 +171,21 @@ async (projectId, location, dataset, dicomStore, studyId) => {
   return data;
 };
 
-export {fetchProjects, fetchLocations, fetchDatasets, fetchDicomStores,
-  fetchStudies, fetchSeries};
+/**
+ * Fetches a dicom file from a given url using Google Authentication
+ * @param {string} url Url for the dicom file
+ * @return {Uint8Array} Byte array of DICOM P10 contents
+ */
+const fetchDicomFile = async (url) => {
+  const response = await authenticatedFetch(url, {
+    headers: {
+      'Accept': 'application/dicom; transfer-syntax=*',
+    },
+  });
+
+  const arrayBuffer = await response.arrayBuffer();
+  return new Uint8Array(arrayBuffer);
+};
+
+export {authenticatedFetch, fetchProjects, fetchLocations, fetchDatasets,
+  fetchDicomStores, fetchStudies, fetchSeries, fetchDicomFile};
