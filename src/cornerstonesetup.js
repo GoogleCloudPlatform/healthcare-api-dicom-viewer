@@ -18,5 +18,3 @@ cornerstoneWADOImageLoader.configure({
     }
   },
 });
-
-cornerstoneWADOImageLoader.webWorkerManager.initialize();

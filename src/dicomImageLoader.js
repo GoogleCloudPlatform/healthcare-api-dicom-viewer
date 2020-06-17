@@ -25,16 +25,22 @@ const createImageObjectFromDicom = (imageId, dicomByteArray) => {
 
   let minPixelValue = dataSet.int16('x00280106');
   if (!minPixelValue) {
-    minPixelValue = pixelData.reduce(function(a, b) {
-      return Math.min(a, b);
-    });
+    minPixelValue = pixelData[0];
+    for (let i = 1; i < pixelData.length; i++) {
+      if (pixelData[i] < minPixelValue) {
+        minPixelValue = pixelData[i];
+      }
+    }
   }
 
   let maxPixelValue = dataSet.int16('x00280107');
   if (!maxPixelValue) {
-    maxPixelValue = pixelData.reduce(function(a, b) {
-      return Math.max(a, b);
-    });
+    maxPixelValue = pixelData[0];
+    for (let i = 1; i < pixelData.length; i++) {
+      if (pixelData[i] > maxPixelValue) {
+        maxPixelValue = pixelData[i];
+      }
+    }
   }
 
   const image = {
