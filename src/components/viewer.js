@@ -4,7 +4,7 @@ import {Paper, makeStyles, Box, LinearProgress, Typography, TextField, Button} f
 import * as cornerstone from 'cornerstone-core';
 import * as auth from '../auth.js';
 import DicomImageSequencer from '../dicomImageSequencer.js';
-import { render } from 'react-dom';
+import {render} from 'react-dom';
 
 const useStyles = makeStyles((theme) => ({
   canvas: {
@@ -20,18 +20,18 @@ const useStyles = makeStyles((theme) => ({
 //   });
 
 //   return (
-    
+
 //   );
 // }, () => true);
 // CornerstoneCanvas.displayName = 'CornerstoneCanvas';
 
 /**
  * React Component for viewing medical images
- * @return {ReactComponent} <Viewer/>
  */
 export default class Viewer extends React.Component {
-  constructor(props) {
-    super(props);
+  /** */
+  constructor({project, location, dataset, dicomStore, study, series}) {
+    super({project, location, dataset, dicomStore, study, series});
     this.state = {
       instances: [],
       numReadyImages: 0,
@@ -50,18 +50,19 @@ export default class Viewer extends React.Component {
     this.renderedImagesCount = 0;
   }
 
+  /**
+   * Set up cornerstone listeners and retrieve instance list on mount
+   */
   componentDidMount() {
     cornerstone.enable(this.canvasElement);
     this.canvasElement.addEventListener('cornerstoneimagerendered', this.onImageRendered.bind(this));
     this.getInstances();
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    if(prevState.instances != this.state.instances) {
-      
-    }
-  }
-
+  /**
+   * Runs when a new image is ready from the DicomImageSequencer
+   * @param {Object} image Cornerstone image
+   */
   onImageReady(image) {
     this.readyImages.push(image);
     if (this.newSequence) {
@@ -77,6 +78,9 @@ export default class Viewer extends React.Component {
     }));
   }
 
+  /**
+   * Runs when an image has been rendered to the cornerstone canvas
+   */
   onImageRendered() {
     this.renderedImagesCount++;
     this.setState({
@@ -88,6 +92,9 @@ export default class Viewer extends React.Component {
     this.displayNextImage();
   }
 
+  /**
+   * Checks the queue of ready images and displays the next one if available
+   */
   displayNextImage() {
     if (this.readyImages.length > 0) {
       const image = this.readyImages.shift();
@@ -97,6 +104,9 @@ export default class Viewer extends React.Component {
     }
   }
 
+  /**
+   * Resets variables and begins fetching dicom images in sequence
+   */
   startDisplayingInstances() {
     this.newSequence = true;
     this.renderedImagesCount = 0;
@@ -115,6 +125,9 @@ export default class Viewer extends React.Component {
     this.dicomSequencer.fetchInstances(this.onImageReady.bind(this));
   }
 
+  /**
+   * Retrieves a list of dicom instances in this series
+   */
   getInstances() {
     const accessToken = auth.getAccessToken();
     if (accessToken) {
@@ -124,7 +137,7 @@ export default class Viewer extends React.Component {
           .then((data) => {
             this.setState({
               instances: data,
-            })
+            });
           })
           .catch((error) => {
             console.error(error);
@@ -132,21 +145,27 @@ export default class Viewer extends React.Component {
     }
   }
 
+  /**
+   * Renders the component
+   * @return {ReactComponent} <Viewer/>
+   */
   render() {
     return (
       <Paper>
         <Box p={2}>
           <div id="cornerstone-div"
-          ref={input => {
-            this.canvasElement = input;
-          }}
-          style={{width: 500, height: 500}}>
+            ref={(input) => {
+              this.canvasElement = input;
+            }}
+            style={{width: 500, height: 500}}>
             <canvas className="cornerstone-canvas"></canvas>
           </div>
           <LinearProgress variant="buffer" value={this.state.renderedImagesProgress} valueBuffer={this.state.readyImagesProgress} />
           <TextField label="Max Simultaneous Requests"
             defaultValue={this.state.maxSimultaneousRequests}
-            onChange={(e) => {this.setState({maxSimultaneousRequests: Number(e.target.value)});}} />
+            onChange={(e) => {
+              this.setState({maxSimultaneousRequests: Number(e.target.value)});
+            }} />
           <Button variant="contained" color="primary" onClick={this.startDisplayingInstances.bind(this)}>Start</Button>
           <Typography variant="h5">Frames Loaded: {this.state.numReadyImages}</Typography>
           <Typography variant="h5">Frames Displayed: {this.state.numRenderedImages}</Typography>
