@@ -20,8 +20,8 @@ export default class Viewer extends React.Component {
    * @param {Object} props.study Study
    * @param {Object} props.series Series
    */
-  constructor({project, location, dataset, dicomStore, study, series}) {
-    super({project, location, dataset, dicomStore, study, series});
+  constructor(props) {
+    super(props);
     this.state = {
       instances: [],
       numReadyImages: 0,
