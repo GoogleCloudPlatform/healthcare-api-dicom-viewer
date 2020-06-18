@@ -4,7 +4,7 @@ import {Typography, Breadcrumbs, Link, Box} from '@material-ui/core';
 import * as auth from '../auth.js';
 import * as api from '../api.js';
 import SearchList from './searchlist.js';
-import Viewer from './viewer2.js';
+import Viewer from './viewer.js';
 
 
 const useStyles = makeStyles((theme) => ({

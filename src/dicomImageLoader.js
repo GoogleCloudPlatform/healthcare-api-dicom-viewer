@@ -1,6 +1,23 @@
 /** @module dicomImageLoader */
 import * as api from './api.js';
 import * as dicomParser from 'dicom-parser';
+import DicomWorker from './webworkers/dicom.worker.js';
+
+const defaultConfig = {
+  useWebworkersToFetch: false,
+};
+const config = Object.assign({}, defaultConfig);
+const availableWebworkers = [];
+
+/**
+ * Change configuration value for the dicomImageLoader
+ * @param {Object} newConfig New config values to change
+ * @param {boolean=} newConfig.useWebworkersToFetch Whether or not webworkers
+ *    should be used to fetch requests
+ */
+const configure = (newConfig) => {
+  Object.assign(config, defaultConfig, newConfig);
+};
 
 /**
  * Creates a cornerstone image object from a DICOM P10 file
@@ -75,6 +92,21 @@ const loadImage = (imageId) => {
   const url = imageId.replace('dicomImageLoader', 'https');
 
   const promise = new Promise((resolve, reject) => {
+    if (config.useWebworkersToFetch) {
+      // Use an available webworker or create a new one
+      const webworker = availableWebworkers.length > 0 ?
+          availableWebworkers.pop() : new DicomWorker();
+
+      webworker.onmessage = (event) => {
+        availableWebworkers.push(webworker);
+      };
+      webworker.postMessage({
+        action: 'fetchDicom',
+        url: url,
+      });
+
+      return;
+    }
     api.fetchDicomFile(url)
         .then((byteArray) => {
           const image = createImageObjectFromDicom(imageId, byteArray);
@@ -91,4 +123,4 @@ const loadImage = (imageId) => {
   };
 };
 
-export {loadImage};
+export {loadImage, configure};

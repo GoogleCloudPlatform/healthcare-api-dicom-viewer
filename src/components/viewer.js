@@ -1,10 +1,10 @@
-import React, {useEffect, useState, useLayoutEffect} from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
-import {Paper, makeStyles, Box, LinearProgress, Typography, TextField, Button} from '@material-ui/core';
+import {Paper, makeStyles, Box, LinearProgress,
+  Typography, TextField, Button} from '@material-ui/core';
 import * as cornerstone from 'cornerstone-core';
 import * as auth from '../auth.js';
 import DicomImageSequencer from '../dicomImageSequencer.js';
-import {render} from 'react-dom';
 
 const useStyles = makeStyles((theme) => ({
   canvas: {
@@ -12,18 +12,6 @@ const useStyles = makeStyles((theme) => ({
     height: 500,
   },
 }));
-
-// const CornerstoneCanvas = React.memo(({setCanvas}) => {
-//   useEffect(() => {
-//     console.log('rerender');
-//     setCanvas(document.getElementById('cornerstone-div'));
-//   });
-
-//   return (
-
-//   );
-// }, () => true);
-// CornerstoneCanvas.displayName = 'CornerstoneCanvas';
 
 /**
  * React Component for viewing medical images
@@ -43,7 +31,15 @@ export default class Viewer extends React.Component {
       maxSimultaneousRequests: 20,
     };
 
-    this.dicomSequencer = new DicomImageSequencer(this.props.project, this.props.location, this.props.dataset, this.props.dicomStore, this.props.study, this.props.series);
+    this.dicomSequencer = new DicomImageSequencer(
+        this.props.project,
+        this.props.location,
+        this.props.dataset,
+        this.props.dicomStore,
+        this.props.study,
+        this.props.series,
+    );
+
     this.readyImages = [];
     this.newSequence = false;
     this.canvasElement;
@@ -55,7 +51,8 @@ export default class Viewer extends React.Component {
    */
   componentDidMount() {
     cornerstone.enable(this.canvasElement);
-    this.canvasElement.addEventListener('cornerstoneimagerendered', this.onImageRendered.bind(this));
+    this.canvasElement.addEventListener('cornerstoneimagerendered',
+        this.onImageRendered.bind(this));
     this.getInstances();
   }
 
@@ -73,7 +70,8 @@ export default class Viewer extends React.Component {
 
     // Update progress bar
     this.setState((prevState) => ({
-      readyImagesProgress: this.readyImages.length / this.state.instances.length * 100,
+      readyImagesProgress: this.readyImages.length /
+                          this.state.instances.length * 100,
       numReadyImages: prevState.numReadyImages + 1,
     }));
   }

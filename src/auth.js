@@ -69,7 +69,9 @@ const storeOAuthUrlParams = () => {
   }
 
   // Clear parameters from url bar once stored
-  window.history.replaceState({}, document.title, '/');
+  let currentUrl = window.location.href;
+  currentUrl = currentUrl.split('#')[0];
+  window.history.replaceState({}, document.title, currentUrl);
 };
 
 /**
