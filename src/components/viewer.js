@@ -10,7 +10,16 @@ import DicomImageSequencer from '../dicomImageSequencer.js';
  * React Component for viewing medical images
  */
 export default class Viewer extends React.Component {
-  /** */
+  /**
+   * Creates a new instance of Viewer component
+   * @param {Object} props React props for this component
+   * @param {string} props.project Project
+   * @param {string} props.location Location
+   * @param {string} props.dataset Dataset
+   * @param {string} props.dicomStore Dicom Store
+   * @param {Object} props.study Study
+   * @param {Object} props.series Series
+   */
   constructor({project, location, dataset, dicomStore, study, series}) {
     super({project, location, dataset, dicomStore, study, series});
     this.state = {
