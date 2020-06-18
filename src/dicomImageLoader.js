@@ -26,6 +26,7 @@ const configure = (newConfig) => {
  * @return {Object} Cornerstone image object
  */
 const createImageObjectFromDicom = (imageId, dicomByteArray) => {
+  // Parse dicom data to retrieve image values
   const dataSet = dicomParser.parseDicom(dicomByteArray);
 
   const width = dataSet.uint16('x00280011');
@@ -34,12 +35,14 @@ const createImageObjectFromDicom = (imageId, dicomByteArray) => {
   const photoInterp = dataSet.string('x00280004');
   const invert = photoInterp == 'MONOCHROME1' ? true: false;
 
+  // Get pixel data from dicomParser
   const pixelDataElement = dataSet.elements.x7fe00010;
   const pixelData = new Int16Array(dataSet.byteArray.buffer,
       pixelDataElement.dataOffset);
 
   const getPixelData = () => pixelData;
 
+  // Calculate min pixel value if not provided in dicom file
   let minPixelValue = dataSet.int16('x00280106');
   if (!minPixelValue) {
     minPixelValue = pixelData[0];
@@ -50,6 +53,7 @@ const createImageObjectFromDicom = (imageId, dicomByteArray) => {
     }
   }
 
+  // Calculate max pixel value if not provided in dicom file
   let maxPixelValue = dataSet.int16('x00280107');
   if (!maxPixelValue) {
     maxPixelValue = pixelData[0];
@@ -60,6 +64,7 @@ const createImageObjectFromDicom = (imageId, dicomByteArray) => {
     }
   }
 
+  // Construct image object from above values
   const image = {
     imageId: imageId,
     minPixelValue: minPixelValue,
@@ -86,7 +91,8 @@ const createImageObjectFromDicom = (imageId, dicomByteArray) => {
 /**
  * Cornerstone image loader for viewing dicom files from Google Healthcare Api
  * @param {string} imageId Url for the dicom file
- * @return {Object} Object containing promise for cornerstone
+ * @return {{promise: Promise<Object>}} Object containing promise for
+ * cornerstone
  */
 const loadImage = (imageId) => {
   const url = imageId.replace('dicomImageLoader', 'https');

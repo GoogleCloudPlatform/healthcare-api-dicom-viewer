@@ -1,25 +1,27 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {Paper, makeStyles, Box, LinearProgress,
-  Typography, TextField, Button} from '@material-ui/core';
+import {Paper, Box, LinearProgress, Typography,
+  TextField, Button} from '@material-ui/core';
 import * as cornerstone from 'cornerstone-core';
 import * as auth from '../auth.js';
 import DicomImageSequencer from '../dicomImageSequencer.js';
-
-const useStyles = makeStyles((theme) => ({
-  canvas: {
-    width: 500,
-    height: 500,
-  },
-}));
 
 /**
  * React Component for viewing medical images
  */
 export default class Viewer extends React.Component {
-  /** */
-  constructor({project, location, dataset, dicomStore, study, series}) {
-    super({project, location, dataset, dicomStore, study, series});
+  /**
+   * Creates a new instance of Viewer component
+   * @param {Object} props React props for this component
+   * @param {string} props.project Project
+   * @param {string} props.location Location
+   * @param {string} props.dataset Dataset
+   * @param {string} props.dicomStore Dicom Store
+   * @param {Object} props.study Study
+   * @param {Object} props.series Series
+   */
+  constructor(props) {
+    super(props);
     this.state = {
       instances: [],
       numReadyImages: 0,
@@ -82,7 +84,8 @@ export default class Viewer extends React.Component {
   onImageRendered() {
     this.renderedImagesCount++;
     this.setState({
-      renderedImagesProgress: this.renderedImagesCount / this.state.instances.length * 100,
+      renderedImagesProgress: this.renderedImagesCount /
+                              this.state.instances.length * 100,
       renderTimer: Date.now() - this.state.renderStartTime,
       numRenderedImages: this.renderedImagesCount,
     });
@@ -118,7 +121,8 @@ export default class Viewer extends React.Component {
       renderedImagesProgress: 0,
     });
 
-    this.dicomSequencer.maxSimultaneousRequests = this.state.maxSimultaneousRequests;
+    this.dicomSequencer.maxSimultaneousRequests =
+        this.state.maxSimultaneousRequests;
     this.dicomSequencer.setInstances(this.state.instances);
     this.dicomSequencer.fetchInstances(this.onImageReady.bind(this));
   }
@@ -158,16 +162,29 @@ export default class Viewer extends React.Component {
             style={{width: 500, height: 500}}>
             <canvas className="cornerstone-canvas"></canvas>
           </div>
-          <LinearProgress variant="buffer" value={this.state.renderedImagesProgress} valueBuffer={this.state.readyImagesProgress} />
+          <LinearProgress variant="buffer"
+            value={this.state.renderedImagesProgress}
+            valueBuffer={this.state.readyImagesProgress} />
           <TextField label="Max Simultaneous Requests"
             defaultValue={this.state.maxSimultaneousRequests}
             onChange={(e) => {
               this.setState({maxSimultaneousRequests: Number(e.target.value)});
             }} />
-          <Button variant="contained" color="primary" onClick={this.startDisplayingInstances.bind(this)}>Start</Button>
-          <Typography variant="h5">Frames Loaded: {this.state.numReadyImages}</Typography>
-          <Typography variant="h5">Frames Displayed: {this.state.numRenderedImages}</Typography>
-          <Typography variant="h5">Time: {this.state.renderTimer / 1000}s</Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={this.startDisplayingInstances.bind(this)}>
+              Start
+          </Button>
+          <Typography variant="h5">
+            Frames Loaded: {this.state.numReadyImages}
+          </Typography>
+          <Typography variant="h5">
+            Frames Displayed: {this.state.numRenderedImages}
+          </Typography>
+          <Typography variant="h5">
+            Time: {this.state.renderTimer / 1000}s
+          </Typography>
         </Box>
       </Paper>
     );
