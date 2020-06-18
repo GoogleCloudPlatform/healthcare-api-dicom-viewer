@@ -11,6 +11,12 @@ import * as cornerstone from 'cornerstone-core';
 export default class DicomImageSequencer {
   /**
    * Instantiates a new DicomImageSequencer
+   * @param {string} project Google project id
+   * @param {string} location Location for project
+   * @param {string} dataset Dataset to use
+   * @param {string} dicomStore Dicom Store to use
+   * @param {Object} study Study to use
+   * @param {Object} series Series to use
    */
   constructor(project, location, dataset, dicomStore, study, series) {
     this.project = project;
@@ -77,7 +83,8 @@ export default class DicomImageSequencer {
    * @param {onImageReady} onImageReady TODO
    */
   checkFetchQueue(onImageReady) {
-    const availableRequests = this.maxSimultaneousRequests - this.currentSimultaneousRequests;
+    const availableRequests =
+        this.maxSimultaneousRequests - this.currentSimultaneousRequests;
     const requestsRemaining = this.fetchQueue.length;
     if (availableRequests > 0 && requestsRemaining > 0) {
       for (let i = 0; i < Math.min(availableRequests, requestsRemaining); i++) {

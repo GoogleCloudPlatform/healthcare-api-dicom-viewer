@@ -1,29 +1,10 @@
-import React, {useEffect, useState, useLayoutEffect} from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
-import {Paper, makeStyles, Box, LinearProgress, Typography, TextField, Button} from '@material-ui/core';
+import {Paper, Box, LinearProgress, Typography,
+  TextField, Button} from '@material-ui/core';
 import * as cornerstone from 'cornerstone-core';
 import * as auth from '../auth.js';
 import DicomImageSequencer from '../dicomImageSequencer.js';
-import {render} from 'react-dom';
-
-const useStyles = makeStyles((theme) => ({
-  canvas: {
-    width: 500,
-    height: 500,
-  },
-}));
-
-// const CornerstoneCanvas = React.memo(({setCanvas}) => {
-//   useEffect(() => {
-//     console.log('rerender');
-//     setCanvas(document.getElementById('cornerstone-div'));
-//   });
-
-//   return (
-
-//   );
-// }, () => true);
-// CornerstoneCanvas.displayName = 'CornerstoneCanvas';
 
 /**
  * React Component for viewing medical images
@@ -43,7 +24,13 @@ export default class Viewer extends React.Component {
       maxSimultaneousRequests: 20,
     };
 
-    this.dicomSequencer = new DicomImageSequencer(this.props.project, this.props.location, this.props.dataset, this.props.dicomStore, this.props.study, this.props.series);
+    this.dicomSequencer = new DicomImageSequencer(this.props.project,
+        this.props.location,
+        this.props.dataset,
+        this.props.dicomStore,
+        this.props.study,
+        this.props.series,
+    );
     this.readyImages = [];
     this.newSequence = false;
     this.canvasElement;
@@ -55,7 +42,8 @@ export default class Viewer extends React.Component {
    */
   componentDidMount() {
     cornerstone.enable(this.canvasElement);
-    this.canvasElement.addEventListener('cornerstoneimagerendered', this.onImageRendered.bind(this));
+    this.canvasElement.addEventListener('cornerstoneimagerendered',
+        this.onImageRendered.bind(this));
     this.getInstances();
   }
 
@@ -73,7 +61,8 @@ export default class Viewer extends React.Component {
 
     // Update progress bar
     this.setState((prevState) => ({
-      readyImagesProgress: this.readyImages.length / this.state.instances.length * 100,
+      readyImagesProgress: this.readyImages.length /
+                          this.state.instances.length * 100,
       numReadyImages: prevState.numReadyImages + 1,
     }));
   }
@@ -84,7 +73,8 @@ export default class Viewer extends React.Component {
   onImageRendered() {
     this.renderedImagesCount++;
     this.setState({
-      renderedImagesProgress: this.renderedImagesCount / this.state.instances.length * 100,
+      renderedImagesProgress: this.renderedImagesCount /
+                              this.state.instances.length * 100,
       renderTimer: Date.now() - this.state.renderStartTime,
       numRenderedImages: this.renderedImagesCount,
     });
@@ -120,7 +110,8 @@ export default class Viewer extends React.Component {
       renderedImagesProgress: 0,
     });
 
-    this.dicomSequencer.maxSimultaneousRequests = this.state.maxSimultaneousRequests;
+    this.dicomSequencer.maxSimultaneousRequests =
+        this.state.maxSimultaneousRequests;
     this.dicomSequencer.setInstances(this.state.instances);
     this.dicomSequencer.fetchInstances(this.onImageReady.bind(this));
   }
@@ -160,16 +151,29 @@ export default class Viewer extends React.Component {
             style={{width: 500, height: 500}}>
             <canvas className="cornerstone-canvas"></canvas>
           </div>
-          <LinearProgress variant="buffer" value={this.state.renderedImagesProgress} valueBuffer={this.state.readyImagesProgress} />
+          <LinearProgress variant="buffer"
+            value={this.state.renderedImagesProgress}
+            valueBuffer={this.state.readyImagesProgress} />
           <TextField label="Max Simultaneous Requests"
             defaultValue={this.state.maxSimultaneousRequests}
             onChange={(e) => {
               this.setState({maxSimultaneousRequests: Number(e.target.value)});
             }} />
-          <Button variant="contained" color="primary" onClick={this.startDisplayingInstances.bind(this)}>Start</Button>
-          <Typography variant="h5">Frames Loaded: {this.state.numReadyImages}</Typography>
-          <Typography variant="h5">Frames Displayed: {this.state.numRenderedImages}</Typography>
-          <Typography variant="h5">Time: {this.state.renderTimer / 1000}s</Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={this.startDisplayingInstances.bind(this)}>
+              Start
+          </Button>
+          <Typography variant="h5">
+            Frames Loaded: {this.state.numReadyImages}
+          </Typography>
+          <Typography variant="h5">
+            Frames Displayed: {this.state.numRenderedImages}
+          </Typography>
+          <Typography variant="h5">
+            Time: {this.state.renderTimer / 1000}s
+          </Typography>
         </Box>
       </Paper>
     );
