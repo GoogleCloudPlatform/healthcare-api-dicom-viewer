@@ -10,6 +10,7 @@ module.exports = {
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist'),
+    globalObject: 'this',
   },
   module: {
     rules: [
@@ -29,9 +30,9 @@ module.exports = {
       },
       {
         test: /\.worker\.js$/,
-        use: {
-          loader: 'worker-loader',
-        },
+        use: [
+          'worker-loader',
+        ],
       },
     ],
   },

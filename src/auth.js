@@ -1,7 +1,7 @@
 /** @module auth */
 const CLIENT_ID =
   '485533938322-gvunr02vbvost1od2dsl13d7hv40crrj.apps.googleusercontent.com';
-const REDIRECT_URI = window.location.href;
+const REDIRECT_URI = location.href;
 
 /**
  * Redirect to Google OAuth2 sign-in page
@@ -69,7 +69,7 @@ const storeOAuthUrlParams = () => {
   }
 
   // Clear parameters from url bar once stored
-  let currentUrl = window.location.href;
+  let currentUrl = location.href;
   currentUrl = currentUrl.split('#')[0];
   window.history.replaceState({}, document.title, currentUrl);
 };
@@ -79,6 +79,12 @@ const storeOAuthUrlParams = () => {
  * @return {string} Access token (or null if none present)
  */
 const getAccessToken = () => {
+  if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) {
+    // If called by a webworker, check if access token has been stored in global self
+    return self.accessToken;
+  }
+
+
   const params = JSON.parse(localStorage.getItem('oauth2-params'));
   if (params && params['access_token']) {
     return params['access_token'];
@@ -89,4 +95,6 @@ const getAccessToken = () => {
 export {signInToGoogle, signOut, storeOAuthUrlParams, getAccessToken};
 
 // Run on every page load
-storeOAuthUrlParams();
+if (typeof WorkerGlobalScope === 'undefined' || !self instanceof WorkerGlobalScope) {
+  storeOAuthUrlParams();
+}

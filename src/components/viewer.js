@@ -185,6 +185,9 @@ export default class Viewer extends React.Component {
           <Typography variant="h5">
             Time: {this.state.renderTimer / 1000}s
           </Typography>
+          <Typography variant="h5">
+            Average FPS: {this.state.numRenderedImages / (this.state.renderTimer / 1000)}
+          </Typography>
         </Box>
       </Paper>
     );
