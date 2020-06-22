@@ -1,6 +1,6 @@
 /** @module auth */
-const CLIENT_ID =
-  '485533938322-gvunr02vbvost1od2dsl13d7hv40crrj.apps.googleusercontent.com';
+import {CLIENT_ID} from './config.js';
+
 const REDIRECT_URI = location.href;
 
 /**
