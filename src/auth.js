@@ -1,6 +1,7 @@
 /** @module auth */
-const CLIENT_ID =
-  '485533938322-gvunr02vbvost1od2dsl13d7hv40crrj.apps.googleusercontent.com';
+import {CLIENT_ID} from './config.js';
+
+const REDIRECT_URI = window.location.href;
 
 /**
  * Redirect to Google OAuth2 sign-in page
@@ -17,7 +18,7 @@ const signInToGoogle = () => {
   // Parameters to pass to OAuth 2.0 endpoint.
   const params = {
     'client_id': CLIENT_ID,
-    'redirect_uri': 'http://localhost:1234',
+    'redirect_uri': REDIRECT_URI,
     'scope': 'https://www.googleapis.com/auth/cloud-healthcare https://www.googleapis.com/auth/cloud-platform',
     'include_granted_scopes': 'true',
     'response_type': 'token',

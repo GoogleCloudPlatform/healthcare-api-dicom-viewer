@@ -1,9 +1,10 @@
 /** @module api */
 import * as auth from './auth.js';
-
-const CLOUD_RESOURCE_MANAGER_API_BASE = 'https://cloudresourcemanager.googleapis.com';
-const HEALTHCARE_API_BASE = 'https://healthcare.googleapis.com';
-const HEALTHCARE_BETA_API_BASE = 'https://content-healthcare.googleapis.com';
+import {
+  CLOUD_RESOURCE_MANAGER_API_BASE,
+  HEALTHCARE_API_BASE,
+  HEALTHCARE_BETA_API_BASE,
+} from './config.js';
 
 /**
  * Fetches a url using an access token, signing the user in
