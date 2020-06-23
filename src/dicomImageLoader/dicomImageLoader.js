@@ -8,7 +8,7 @@ const defaultConfig = {
   useWebworkersToParse: false,
 };
 const config = Object.assign({}, defaultConfig);
-const workerManager = new DicomWorkerManager(2);
+const workerManager = new DicomWorkerManager();
 
 /**
  * Change configuration value for the dicomImageLoader
