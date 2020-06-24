@@ -38,7 +38,7 @@ const authenticatedFetch = async (url) => {
 /**
  * Fetches a list of the users google cloud projects recursively
  * @param {string=} pageToken Page token to use for the request
- * @param {Array} projects Projects fetched from a previous iteration
+ * @param {Array=} projects Projects fetched from a previous iteration
  * @return {Array<string>} List of projects available to the user
  */
 const fetchProjects = async (pageToken, projects) => {
