@@ -43,6 +43,7 @@ export default class Viewer extends React.Component {
     );
 
     this.readyImages = [];
+    this.readyImagesCount = 0;
     this.newSequence = false;
     this.canvasElement;
     this.renderedImagesCount = 0;
@@ -64,18 +65,20 @@ export default class Viewer extends React.Component {
    */
   onImageReady(image) {
     this.readyImages.push(image);
-    if (this.newSequence) {
+    this.readyImagesCount++;
+
+    if (this.newSequence /* && this.readyImagesCount > this.state.instances.length / 3*/ ) {
       // If this is the first image in the sequence, render immediately
       this.displayNextImage();
       this.newSequence = false;
     }
 
     // Update progress bar
-    this.setState((prevState) => ({
-      readyImagesProgress: this.readyImages.length /
-                          this.state.instances.length * 100,
-      numReadyImages: prevState.numReadyImages + 1,
-    }));
+    // this.setState((prevState) => ({
+    //   readyImagesProgress: this.readyImages.length /
+    //                       this.state.instances.length * 100,
+    //   numReadyImages: prevState.numReadyImages + 1,
+    // }));
   }
 
   /**
@@ -112,6 +115,7 @@ export default class Viewer extends React.Component {
     this.newSequence = true;
     this.renderedImagesCount = 0;
     this.readyImages = [];
+    this.readyImagesCount = 0;
     this.setState({
       renderStartTime: Date.now(),
       renderTimer: 0,
