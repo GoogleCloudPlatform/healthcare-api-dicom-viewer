@@ -34,7 +34,7 @@ test('Items do not display until data is done loading', () => {
   expect(screen.getAllByText('item', {exact: false})).toHaveLength(10);
 });
 
-test('Only display first 50 items until user scrolls', () => {
+test('Only first 50 items are displayed until user scrolls', () => {
   const items = generateItems(70);
   render(
       <SearchList items={items} onClickItem={() => {}} isLoading={false}/>,
@@ -49,4 +49,19 @@ test('Only display first 50 items until user scrolls', () => {
   // Scroll again to ensure all items are displayed
   fireEvent.scroll(document, {target: {scrollY: 100}});
   expect(screen.getAllByText('item', {exact: false})).toHaveLength(70);
+});
+
+test('onClickItem callback returns item3 when item3 is clicked', (done) => {
+  const items = generateItems(5);
+  const onClickItem = (item) => {
+    expect(item).toBe('item3');
+    done();
+  };
+
+  render(
+      <SearchList items={items} onClickItem={onClickItem} isLoading={false}/>,
+  );
+
+  // Click item3 to trigger onClickItem
+  fireEvent.click(screen.getByText('item3'));
 });
