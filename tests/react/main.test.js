@@ -1,5 +1,5 @@
 import React from 'react';
-import {render, fireEvent, screen, waitFor, prettyDOM, getRoles} from '@testing-library/react';
+import {render, fireEvent, screen, waitFor} from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
 import * as api from '../../src/api.js';
 import * as auth from '../../src/auth.js';
