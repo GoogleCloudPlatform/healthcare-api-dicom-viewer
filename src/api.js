@@ -173,6 +173,30 @@ async (projectId, location, dataset, dicomStore, studyId) => {
 };
 
 /**
+ * Fetches a list of instances in a given
+ * project/location/dataset/dicomStore/study/series
+ * @param {string} projectId Project ID
+ * @param {string} location Location
+ * @param {string} dataset Dataset
+ * @param {string} dicomStore Dicom Store
+ * @param {string} studyId Study UID
+ * @param {string} seriesId Series UID
+ * @return {Array<Object>} List of series in the study
+ */
+const fetchInstances =
+async (projectId, location, dataset, dicomStore, studyId, seriesId) => {
+  const endpoint =
+    `/v1/projects/${projectId}/locations/${location}/datasets` +
+    `/${dataset}/dicomStores/${dicomStore}/dicomWeb/studies/${studyId}` +
+    `/series/${seriesId}/instances`;
+  const response =
+    await authenticatedFetch(HEALTHCARE_API_BASE + endpoint);
+  const data = await response.json();
+
+  return data;
+};
+
+/**
  * Fetches a dicom file from a given url using Google Authentication
  * @param {string} url Url for the dicom file
  * @return {Uint8Array} Byte array of DICOM P10 contents
@@ -189,4 +213,4 @@ const fetchDicomFile = async (url) => {
 };
 
 export {authenticatedFetch, fetchProjects, fetchLocations, fetchDatasets,
-  fetchDicomStores, fetchStudies, fetchSeries, fetchDicomFile};
+  fetchDicomStores, fetchStudies, fetchSeries, fetchInstances, fetchDicomFile};
