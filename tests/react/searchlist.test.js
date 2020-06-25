@@ -1,5 +1,5 @@
 import React from 'react';
-import {render, fireEvent, screen} from '@testing-library/react';
+import {render, fireEvent, screen, waitFor} from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
 import SearchList from '../../src/components/searchlist.js';
 
@@ -63,4 +63,35 @@ test('onClickItem callback returns item3 when item3 is clicked', (done) => {
 
   // Click item3 to trigger onClickItem
   fireEvent.click(screen.getByText('item3'));
+});
+
+test('Typing in search bar filters items', async () => {
+  const items = generateItems(60);
+  render(
+      <SearchList items={items} onClickItem={() => {}} isLoading={false}/>,
+  );
+
+  // Searching for item10 should filter to only one item
+  fireEvent.input(screen.getByRole('textbox'), {target: {value: 'item10'}});
+  await waitFor(() =>
+    expect(screen.getAllByText('item', {exact: false})).toHaveLength(1));
+
+  // Searching for item6 should filter to two items (item6 and item60)
+  fireEvent.input(screen.getByRole('textbox'), {target: {value: 'item6'}});
+  await waitFor(() =>
+    expect(screen.getAllByText('item', {exact: false})).toHaveLength(2));
+
+  // Searching for blank space should return all items (only 50 will be
+  // displayed as that is the initial max number of items until scroll)
+  fireEvent.input(screen.getByRole('textbox'), {target: {value: ' '}});
+  await waitFor(() =>
+    expect(screen.getAllByText('item', {exact: false})).toHaveLength(50));
+
+  // Searching for item70 should yield no items
+  fireEvent.input(screen.getByRole('textbox'), {target: {value: 'item70'}});
+  await waitFor(() => {
+    expect(() => {
+      screen.getAllByText('item', {exact: false});
+    }).toThrow();
+  });
 });
