@@ -4,9 +4,10 @@ import '@testing-library/jest-dom/extend-expect';
 import SearchList from '../../src/components/searchlist.js';
 
 /**
+ * Helper function -
  * Returns an array of items labeled as so: item1, item2...
  * @param {number} numItems Number of items to generate
- * @return {string[]} List of example items
+ * @return {string[]} List of numbered items
  */
 const generateItems = (numItems) => {
   const items = [];
@@ -23,9 +24,7 @@ test('Items do not display until data is done loading', () => {
   );
 
   // Ensure no items are displayed
-  expect(() => {
-    screen.getAllByText('item', {exact: false});
-  }).toThrow();
+  expect(screen.queryAllByText('item', {exact: false})).toHaveLength(0);
 
   // Set isLoading=false and check items again
   rerender(
