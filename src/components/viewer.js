@@ -57,6 +57,13 @@ export default class Viewer extends React.Component {
   }
 
   /**
+   * Cancel ongoing fetches to avoid state change after unmount
+   */
+  componentWillUnmount() {
+    this.getInstancesPromise.cancel();
+  }
+
+  /**
    * Runs when a new image is ready from the DicomImageSequencer
    * @param {Object} image Cornerstone image
    */
@@ -129,15 +136,25 @@ export default class Viewer extends React.Component {
    * Retrieves a list of dicom instances in this series
    */
   async getInstances() {
-    const instances = await api.fetchInstances(
-        this.props.project, this.props.location,
-        this.props.dataset, this.props.dicomStore,
-        this.props.study['0020000D'].Value[0],
-        this.props.series['0020000E'].Value[0],
-    );
-    this.setState({
-      instances,
-    });
+    this.getInstancesPromise = api.makeCancelable(
+        api.fetchInstances(
+            this.props.project, this.props.location,
+            this.props.dataset, this.props.dicomStore,
+            this.props.study['0020000D'].Value[0],
+            this.props.series['0020000E'].Value[0],
+        ));
+
+    this.getInstancesPromise.promise
+        .then((instances) => {
+          this.setState({
+            instances,
+          });
+        })
+        .catch((reason) => {
+          if (!reason.isCanceled) {
+            console.error(reason);
+          }
+        });
   }
 
   /**
