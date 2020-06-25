@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {Paper, Box, LinearProgress, Typography,
   TextField, Button} from '@material-ui/core';
 import * as cornerstone from 'cornerstone-core';
-import * as auth from '../auth.js';
+import * as api from '../api.js';
 import DicomImageSequencer from '../dicomImageSequencer.js';
 
 /**
@@ -57,6 +57,13 @@ export default class Viewer extends React.Component {
     this.canvasElement.addEventListener('cornerstoneimagerendered',
         this.onImageRendered.bind(this));
     this.getInstances();
+  }
+
+  /**
+   * Cancel ongoing fetches to avoid state change after unmount
+   */
+  componentWillUnmount() {
+    this.getInstancesPromise.cancel();
   }
 
   /**
@@ -134,21 +141,26 @@ export default class Viewer extends React.Component {
   /**
    * Retrieves a list of dicom instances in this series
    */
-  getInstances() {
-    const accessToken = auth.getAccessToken();
-    if (accessToken) {
-      fetch(`https://healthcare.googleapis.com/v1/projects/${this.props.project}/locations/${this.props.location}/datasets/${this.props.dataset}/dicomStores/${this.props.dicomStore}/dicomWeb/studies/${this.props.study['0020000D'].Value[0]}/series/${this.props.series['0020000E'].Value[0]}/instances` +
-        `?access_token=${accessToken}`)
-          .then((response) => response.json())
-          .then((data) => {
-            this.setState({
-              instances: data,
-            });
-          })
-          .catch((error) => {
-            console.error(error);
+  async getInstances() {
+    this.getInstancesPromise = api.makeCancelable(
+        api.fetchInstances(
+            this.props.project, this.props.location,
+            this.props.dataset, this.props.dicomStore,
+            this.props.study['0020000D'].Value[0],
+            this.props.series['0020000E'].Value[0],
+        ));
+
+    this.getInstancesPromise.promise
+        .then((instances) => {
+          this.setState({
+            instances,
           });
-    }
+        })
+        .catch((reason) => {
+          if (!reason.isCanceled) {
+            console.error(reason);
+          }
+        });
   }
 
   /**
@@ -177,6 +189,7 @@ export default class Viewer extends React.Component {
           <Button
             variant="contained"
             color="primary"
+            disabled={this.state.instances.length == 0}
             onClick={this.startDisplayingInstances.bind(this)}>
               Start
           </Button>

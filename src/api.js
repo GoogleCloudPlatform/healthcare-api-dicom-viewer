@@ -54,7 +54,7 @@ const authenticatedFetch = async (input, init) => {
  * Fetches a list of the users google cloud projects recursively
  * @param {string=} pageToken Page token to use for the request
  * @param {Array=} projects Projects fetched from a previous iteration
- * @return {Array<string>} List of projects available to the user
+ * @return {Promise<Object[]>} List of projects available to the user
  */
 const fetchProjects = async (pageToken, projects) => {
   const endpoint = '/v1/projects' +
@@ -83,7 +83,7 @@ const fetchProjects = async (pageToken, projects) => {
 /**
  * Fetches a list of the possible locations for a given project
  * @param {string} projectId Project id to search locations for
- * @return {Array<string>} List of locations available for project
+ * @return {Promise<Object[]>} List of locations available for project
  */
 const fetchLocations = async (projectId) => {
   const endpoint = `/v1beta1/projects/${projectId}/locations`;
@@ -99,7 +99,7 @@ const fetchLocations = async (projectId) => {
  * Fetches a list of the datasets in a given project/location
  * @param {string} projectId Project id
  * @param {string} location Location
- * @return {Array<string>} List of datasets available
+ * @return {Promise<Object[]>} List of datasets available
  */
 const fetchDatasets = async (projectId, location) => {
   const endpoint = `/v1/projects/${projectId}/locations/${location}/datasets`;
@@ -116,7 +116,7 @@ const fetchDatasets = async (projectId, location) => {
  * @param {string} projectId Project ID
  * @param {string} location Location
  * @param {string} dataset Dataset
- * @return {Array<string>} List of dicomStores available
+ * @return {Promise<Object[]>} List of dicomStores available
  */
 const fetchDicomStores = async (projectId, location, dataset) => {
   const endpoint =
@@ -137,7 +137,7 @@ const fetchDicomStores = async (projectId, location, dataset) => {
  * @param {string} location Location
  * @param {string} dataset Dataset
  * @param {string} dicomStore Dicom Store
- * @return {Array<Object>} List of studies in the dicom store
+ * @return {Promise<Object[]>} List of studies in the dicom store
  */
 const fetchStudies =
 async (projectId, location, dataset, dicomStore) => {
@@ -158,13 +158,37 @@ async (projectId, location, dataset, dicomStore) => {
  * @param {string} dataset Dataset
  * @param {string} dicomStore Dicom Store
  * @param {string} studyId Study UID
- * @return {Array<Object>} List of series in the study
+ * @return {Promise<Object[]>} List of series in the study
  */
 const fetchSeries =
 async (projectId, location, dataset, dicomStore, studyId) => {
   const endpoint =
     `/v1/projects/${projectId}/locations/${location}/datasets/${dataset}` +
     `/dicomStores/${dicomStore}/dicomWeb/studies/${studyId}/series`;
+  const response =
+    await authenticatedFetch(HEALTHCARE_API_BASE + endpoint);
+  const data = await response.json();
+
+  return data;
+};
+
+/**
+ * Fetches a list of instances in a given
+ *    project/location/dataset/dicomStore/study/series
+ * @param {string} projectId Project ID
+ * @param {string} location Location
+ * @param {string} dataset Dataset
+ * @param {string} dicomStore Dicom Store
+ * @param {string} studyId Study UID
+ * @param {string} seriesId Series UID
+ * @return {Promise<Object[]>} List of instances in the series
+ */
+const fetchInstances =
+async (projectId, location, dataset, dicomStore, studyId, seriesId) => {
+  const endpoint =
+    `/v1/projects/${projectId}/locations/${location}/datasets` +
+    `/${dataset}/dicomStores/${dicomStore}/dicomWeb/studies/${studyId}` +
+    `/series/${seriesId}/instances`;
   const response =
     await authenticatedFetch(HEALTHCARE_API_BASE + endpoint);
   const data = await response.json();
@@ -188,5 +212,38 @@ const fetchDicomFile = async (url) => {
   return new Uint8Array(arrayBuffer);
 };
 
+/**
+ * @typedef {Object} CancelablePromise
+ * @property {Promise} promise The promise object
+ * @property {function(): undefined} cancel Function to cancel the promise
+ */
+
+/**
+ * Turns a promise into a cancelable promise to avoid
+ * setting state after component unmounts
+ * @param {Promise} promise Promise to make cancelable
+ * @return {CancelablePromise} The cancelable promise
+ */
+const makeCancelable = (promise) => {
+  let hasCanceled_ = false;
+
+  const wrappedPromise = new Promise((resolve, reject) => {
+    promise.then(
+        // eslint-disable-next-line prefer-promise-reject-errors
+        (val) => hasCanceled_ ? reject({isCanceled: true}) : resolve(val),
+        // eslint-disable-next-line prefer-promise-reject-errors
+        (error) => hasCanceled_ ? reject({isCanceled: true}) : reject(error),
+    );
+  });
+
+  return {
+    promise: wrappedPromise,
+    cancel() {
+      hasCanceled_ = true;
+    },
+  };
+};
+
 export {authenticatedFetch, fetchProjects, fetchLocations, fetchDatasets,
-  fetchDicomStores, fetchStudies, fetchSeries, fetchDicomFile};
+  fetchDicomStores, fetchStudies, fetchSeries, fetchInstances, fetchDicomFile,
+  makeCancelable};
