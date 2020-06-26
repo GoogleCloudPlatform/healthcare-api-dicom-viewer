@@ -91,4 +91,4 @@ test('Typing in search bar filters items', async () => {
   fireEvent.input(screen.getByRole('textbox'), {target: {value: 'item70'}});
   await waitFor(() =>
     expect(screen.queryAllByText('item', {exact: false})).toHaveLength(0));
-});
+}, 10000);
