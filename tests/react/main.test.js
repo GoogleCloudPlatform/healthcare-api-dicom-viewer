@@ -142,4 +142,6 @@ test('User can navigate between project, location, dataset, dicomStore, study, a
   fireEvent.click(screen.getByText('project2'));
   await waitFor(() =>
     expect(screen.queryByText('Select Project')).not.toBeNull());
+  await waitFor(() =>
+    expect(screen.getAllByText(/^project\d+$/)).toHaveLength(5));
 });
