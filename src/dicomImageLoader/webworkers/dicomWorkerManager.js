@@ -1,4 +1,4 @@
-import DicomWorker from './dicom.worker.js';
+import WorkerLinkedList from './workerLinkedList.js';
 import * as auth from '../../auth.js';
 
 /**
@@ -12,7 +12,7 @@ class DicomWorkerManager {
    * Defaults to number of logical processors in computer
    */
   constructor(numWorkers) {
-    this.workers = [];
+    this.workers = new WorkerLinkedList();
     this.fetchDicomTasks = {};
     this.createImageTasks = {};
 
@@ -22,17 +22,11 @@ class DicomWorkerManager {
 
     // Initialize workers
     for (let i = 0; i < numWorkers; i++) {
-      const newWorker = {
-        worker: new DicomWorker(),
-        activeTasks: 0,
-      };
-
+      const newWorker = this.workers.addNewWorker();
       newWorker.worker.onmessage = (event) => {
         this.onWorkerMessage(event);
-        newWorker.activeTasks--;
+        this.workers.decrementTasks(newWorker);
       };
-
-      this.workers.push(newWorker);
     }
   }
 
@@ -56,14 +50,7 @@ class DicomWorkerManager {
    * @return {Object} worker object
    */
   getNextWorker() {
-    let nextWorker = this.workers[0];
-    for (let i = 1; i < this.workers.length; i++) {
-      if (this.workers[i].activeTasks < nextWorker.activeTasks) {
-        nextWorker = this.workers[i];
-      }
-    }
-
-    return nextWorker;
+    return this.workers.head;
   }
 
   /**
@@ -87,7 +74,7 @@ class DicomWorkerManager {
         url,
         accessToken: auth.getAccessToken(),
       });
-      worker.activeTasks++;
+      this.workers.incrementTasks(worker);
     });
   }
 
@@ -114,7 +101,7 @@ class DicomWorkerManager {
         byteArray,
         imageId,
       });
-      worker.activeTasks++;
+      this.workers.incrementTasks(worker);
     });
   }
 
