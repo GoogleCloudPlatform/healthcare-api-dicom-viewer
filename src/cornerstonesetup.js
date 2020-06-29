@@ -4,5 +4,5 @@ import * as dicomImageLoader from './dicomImageLoader/dicomImageLoader.js';
 cornerstone.registerImageLoader('dicomImageLoader', dicomImageLoader.loadImage);
 dicomImageLoader.configure({
   useWebworkersToFetch: false,
-  useWebworkersToParse: true,
+  useWebworkersToParse: false,
 });
