@@ -28,9 +28,8 @@ export default class Viewer extends React.Component {
       readyImagesProgress: 0,
       numRenderedImages: 0,
       renderedImagesProgress: 0,
-      renderStartTime: 0,
-      renderTimer: 0,
       maxSimultaneousRequests: 20,
+      totalRenderTime: 0,
     };
 
     this.dicomSequencer = new DicomImageSequencer(
@@ -42,6 +41,7 @@ export default class Viewer extends React.Component {
         this.props.series,
     );
 
+    this.renderStartTime = 0,
     this.readyImages = [];
     this.readyImagesCount = 0;
     this.newSequence = false;
@@ -74,18 +74,11 @@ export default class Viewer extends React.Component {
     this.readyImages.push(image);
     this.readyImagesCount++;
 
-    if (this.newSequence /* && this.readyImagesCount > this.state.instances.length / 3*/ ) {
+    if (this.newSequence /* && (this.readyImagesCount > this.state.instances.length / 5) */ ) {
       // If this is the first image in the sequence, render immediately
       this.displayNextImage();
       this.newSequence = false;
     }
-
-    // Update progress bar
-    // this.setState((prevState) => ({
-    //   readyImagesProgress: this.readyImages.length /
-    //                       this.state.instances.length * 100,
-    //   numReadyImages: prevState.numReadyImages + 1,
-    // }));
   }
 
   /**
@@ -93,12 +86,15 @@ export default class Viewer extends React.Component {
    */
   onImageRendered() {
     this.renderedImagesCount++;
-    this.setState({
-      renderedImagesProgress: this.renderedImagesCount /
-                              this.state.instances.length * 100,
-      renderTimer: Date.now() - this.state.renderStartTime,
-      numRenderedImages: this.renderedImagesCount,
-    });
+
+    // console.log(`Loaded images: ${this.readyImagesCount}\nDisplayed images: ${this.renderedImagesCount}\n`);
+    if (this.renderedImagesCount == 1) {
+      this.renderStartTime = Date.now();
+    } else if (this.renderedImagesCount == this.state.instances.length) {
+      this.setState({
+        totalRenderTime: Date.now() - this.renderStartTime,
+      });
+    }
 
     this.displayNextImage();
   }
@@ -111,6 +107,7 @@ export default class Viewer extends React.Component {
       const image = this.readyImages.shift();
       cornerstone.displayImage(this.canvasElement, image);
     } else {
+      console.log('Waiting on next image');
       this.newSequence = true;
     }
   }
@@ -124,8 +121,6 @@ export default class Viewer extends React.Component {
     this.readyImages = [];
     this.readyImagesCount = 0;
     this.setState({
-      renderStartTime: Date.now(),
-      renderTimer: 0,
       numReadyImages: 0,
       readyImagesProgress: 0,
       numRenderedImages: 0,
@@ -199,12 +194,14 @@ export default class Viewer extends React.Component {
           <Typography variant="h5">
             Frames Displayed: {this.state.numRenderedImages}
           </Typography>
+          {this.state.totalRenderTime > 0 ?
           <Typography variant="h5">
-            Time: {this.state.renderTimer / 1000}s
-          </Typography>
+            Time: {this.state.totalRenderTime / 1000}s
+          </Typography> : null}
+          {this.state.totalRenderTime > 0 ?
           <Typography variant="h5">
-            Average FPS: {this.state.numRenderedImages / (this.state.renderTimer / 1000)}
-          </Typography>
+            Average FPS: {this.state.instances.length / (this.state.totalRenderTime / 1000)}
+          </Typography> : null}
         </Box>
       </Paper>
     );
