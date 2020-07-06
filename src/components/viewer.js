@@ -76,8 +76,18 @@ export default class Viewer extends React.Component {
 
     if (this.newSequence /* && (this.readyImagesCount > this.state.instances.length / 5) */ ) {
       // If this is the first image in the sequence, render immediately
-      this.displayNextImage();
+      // this.displayNextImage();
       this.newSequence = false;
+    }
+
+    if (this.readyImagesCount == 1) {
+      this.renderStartTime = Date.now();
+    } else if (this.readyImagesCount == this.state.instances.length) {
+      this.setState({
+        totalRenderTime: Date.now() - this.renderStartTime,
+        numReadyImages: this.readyImagesCount,
+        numRenderedImages: this.numRenderedImages,
+      });
     }
   }
 
@@ -93,6 +103,8 @@ export default class Viewer extends React.Component {
     } else if (this.renderedImagesCount == this.state.instances.length) {
       this.setState({
         totalRenderTime: Date.now() - this.renderStartTime,
+        numReadyImages: this.readyImagesCount,
+        numRenderedImages: this.numRenderedImages,
       });
     }
 
