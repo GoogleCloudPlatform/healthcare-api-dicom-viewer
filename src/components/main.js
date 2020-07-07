@@ -229,7 +229,7 @@ export default function Main() {
     setSelectedDicomStore(null);
 
     clearStudy();
-    setSelectedStudy([]);
+    setStudies([]);
   };
   /** Clears dicomStore state and reloads dicomStore list */
   const clearAndLoadDicomStores = () => {
