@@ -87,6 +87,7 @@ const fetchLocations = async (projectId) => {
  * @return {Array<string>} List of datasets available
  */
 const fetchDatasets = async (projectId, location) => {
+  // TODO: Handle page tokens
   const endpoint = `/v1/projects/${projectId}/locations/${location}/datasets`;
   const response =
     await authenticatedFetch(HEALTHCARE_API_BASE + endpoint);
@@ -104,6 +105,7 @@ const fetchDatasets = async (projectId, location) => {
  * @return {Array<string>} List of dicomStores available
  */
 const fetchDicomStores = async (projectId, location, dataset) => {
+  // TODO: Handle page tokens
   const endpoint =
     `/v1/projects/${projectId}/locations/${location}/datasets/${dataset}` +
     `/dicomStores`;
