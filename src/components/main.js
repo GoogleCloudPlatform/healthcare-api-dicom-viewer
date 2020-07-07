@@ -184,25 +184,14 @@ export default function Main() {
   };
 
   /**
-   * Clears all state up to and including project
+   * Clears all state up to and including project and reloads
+   * projects
    */
-  const clearProject = () => {
+  const clearAndLoadProjects = () => {
     setSelectedProject(null);
 
-    setSelectedLocation(null);
+    clearLocation();
     setLocations([]);
-
-    setSelectedDataset(null);
-    setDatasets([]);
-
-    setSelectedDicomStore(null);
-    setDicomStores([]);
-
-    setSelectedStudy(null);
-    setStudies([]);
-
-    setSelectedSeries(null);
-    setSeries([]);
 
     loadProjects();
   };
@@ -213,72 +202,62 @@ export default function Main() {
   const clearLocation = () => {
     setSelectedLocation(null);
 
-    setSelectedDataset(null);
+    clearDataset();
     setDatasets([]);
-
-    setSelectedDicomStore(null);
-    setDicomStores([]);
-
-    setSelectedStudy(null);
-    setStudies([]);
-
-    setSelectedSeries(null);
-    setSeries([]);
-
+  };
+  /** Clears location state and reloads locations list */
+  const clearAndLoadLocations = () => {
+    clearLocation();
     loadLocations(selectedProject);
   };
 
-  /**
-   * Clears all state up to and including dataset
-   */
+  /** Clears all state up to and including dataset */
   const clearDataset = () => {
     setSelectedDataset(null);
 
-    setSelectedDicomStore(null);
+    clearDicomStore();
     setDicomStores([]);
-
-    setSelectedStudy(null);
-    setStudies([]);
-
-    setSelectedSeries(null);
-    setSeries([]);
-
+  };
+  /** Clears dataset state and reloads dataset list */
+  const clearAndLoadDatasets = () => {
+    clearDataset();
     loadDatasets(selectedProject, selectedLocation);
   };
 
-  /**
-   * Clears all state up to and including dicom store
-   */
+  /** Clears all state up to and including dicom store */
   const clearDicomStore = () => {
     setSelectedDicomStore(null);
 
-    setSelectedStudy(null);
+    clearStudy();
     setStudies([]);
-
-    setSelectedSeries(null);
-    setSeries([]);
-
+  };
+  /** Clears dicomStore state and reloads dicomStore list */
+  const clearAndLoadDicomStores = () => {
+    clearDicomStore();
     loadDicomStores(selectedProject, selectedLocation, selectedDataset);
   };
 
-  /**
-   * Clears all state up to and including study
-   */
+  /** Clears all state up to and including study */
   const clearStudy = () => {
     setSelectedStudy(null);
 
-    setSelectedSeries(null);
+    clearSeries();
     setSeries([]);
-
+  };
+  /** Clears study state and reloads study list */
+  const clearAndLoadStudies = () => {
+    clearStudy();
     loadStudies(selectedProject, selectedLocation,
         selectedDataset, selectedDicomStore);
   };
 
-  /**
-   * Clears series state
-   */
+  /** Clears series state */
   const clearSeries = () => {
     setSelectedSeries(null);
+  };
+  /** Clears series state and reloads series list */
+  const clearAndLoadSeries = () => {
+    clearSeries();
     loadSeries(selectedProject, selectedLocation,
         selectedDataset, selectedDicomStore,
         selectedStudy['0020000D'].Value[0]);
@@ -290,14 +269,14 @@ export default function Main() {
         <Box flexGrow={1}>
           <Breadcrumbs>
             {selectedProject ?
-              <Link color="inherit" href="#" onClick={clearProject}>
+              <Link color="inherit" href="#" onClick={clearAndLoadProjects}>
                 {selectedProject}
               </Link> :
               <Typography color="textPrimary">
                 Select Project
               </Typography>}
             {selectedLocation ?
-              <Link color="inherit" href="#" onClick={clearLocation}>
+              <Link color="inherit" href="#" onClick={clearAndLoadLocations}>
                 {selectedLocation}
               </Link> :
               selectedProject ?
@@ -305,7 +284,7 @@ export default function Main() {
                   Select Location
                 </Typography> : null}
             {selectedDataset ?
-              <Link color="inherit" href="#" onClick={clearDataset}>
+              <Link color="inherit" href="#" onClick={clearAndLoadDatasets}>
                 {selectedDataset}
               </Link> :
               selectedLocation ?
@@ -313,7 +292,7 @@ export default function Main() {
                   Select Dataset
                 </Typography> : null}
             {selectedDicomStore ?
-              <Link color="inherit" href="#" onClick={clearDicomStore}>
+              <Link color="inherit" href="#" onClick={clearAndLoadDicomStores}>
                 {selectedDicomStore}
               </Link> :
               selectedDataset ?
@@ -321,7 +300,7 @@ export default function Main() {
                   Select Dicom Store
                 </Typography> : null}
             {selectedStudy ?
-              <Link color="inherit" href="#" onClick={clearStudy}>
+              <Link color="inherit" href="#" onClick={clearAndLoadStudies}>
                 {selectedStudy.displayValue}
               </Link> :
               selectedDicomStore ?
@@ -329,7 +308,7 @@ export default function Main() {
                   Select Study
                 </Typography> : null}
             {selectedSeries ?
-              <Link color="inherit" href="#" onClick={clearSeries}>
+              <Link color="inherit" href="#" onClick={clearAndLoadSeries}>
                 {selectedSeries.displayValue}
               </Link> :
               selectedStudy ?
