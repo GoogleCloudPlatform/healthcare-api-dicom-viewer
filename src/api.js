@@ -68,7 +68,7 @@ const fetchProjects = async (pageToken, projects) => {
   if (data.nextPageToken) {
     if (projects) {
       return fetchProjects(data.nextPageToken,
-        [...projects, ...data.projects]);
+          [...projects, ...data.projects]);
     }
     return fetchProjects(data.nextPageToken, data.projects);
   }
@@ -206,19 +206,16 @@ const fetchInstances =
 const fetchDicomFile = async (url) => {
   const response = await authenticatedFetch(url, {
     headers: {
-      'Accept': 'multipart/related; type="application/dicom"; transfer-syntax=1.2.840.10008.1.2.1',
+      'Accept': 'multipart/related;' +
+                'type="application/dicom";' +
+                'transfer-syntax=1.2.840.10008.1.2.1',
     },
   });
 
   let arrayBuffer = await response.arrayBuffer();
   // Strip multipart header from arrayBuffer
   arrayBuffer = arrayBuffer.slice(136, arrayBuffer.byteLength - 68);
-  const byteArray = new Uint8Array(arrayBuffer);
-  // console.log(byteArray);
-  // for(let i = 525300; i < byteArray.length; i++) {
-  //   console.log(`${i}: ${byteArray[i]}, ${String.fromCharCode(byteArray[i])}`);
-  // }
-  return byteArray;
+  return new Uint8Array(arrayBuffer);
 };
 
 /**
@@ -238,10 +235,10 @@ const makeCancelable = (promise) => {
 
   const wrappedPromise = new Promise((resolve, reject) => {
     promise.then(
-      // eslint-disable-next-line prefer-promise-reject-errors
-      (val) => hasCanceled_ ? reject({ isCanceled: true }) : resolve(val),
-      // eslint-disable-next-line prefer-promise-reject-errors
-      (error) => hasCanceled_ ? reject({ isCanceled: true }) : reject(error),
+        // eslint-disable-next-line prefer-promise-reject-errors
+        (val) => hasCanceled_ ? reject({isCanceled: true}) : resolve(val),
+        // eslint-disable-next-line prefer-promise-reject-errors
+        (error) => hasCanceled_ ? reject({isCanceled: true}) : reject(error),
     );
   });
 
@@ -256,5 +253,5 @@ const makeCancelable = (promise) => {
 export {
   authenticatedFetch, fetchProjects, fetchLocations, fetchDatasets,
   fetchDicomStores, fetchStudies, fetchSeries, fetchInstances, fetchDicomFile,
-  makeCancelable
+  makeCancelable,
 };

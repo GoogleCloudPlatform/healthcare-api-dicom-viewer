@@ -79,8 +79,10 @@ const storeOAuthUrlParams = () => {
  * @return {string} Access token (or null if none present)
  */
 const getAccessToken = () => {
-  if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) {
-    // If called by a webworker, check if access token has been stored in global self
+  if (typeof WorkerGlobalScope !== 'undefined' &&
+      self instanceof WorkerGlobalScope) {
+    // If called by a webworker, check if access token
+    // has been stored in global self
     return self.accessToken;
   }
 
@@ -95,6 +97,7 @@ const getAccessToken = () => {
 export {signInToGoogle, signOut, storeOAuthUrlParams, getAccessToken};
 
 // Run on every page load
-if (typeof WorkerGlobalScope === 'undefined' || !self instanceof WorkerGlobalScope) {
+if (typeof WorkerGlobalScope === 'undefined' ||
+   !self instanceof WorkerGlobalScope) {
   storeOAuthUrlParams();
 }
