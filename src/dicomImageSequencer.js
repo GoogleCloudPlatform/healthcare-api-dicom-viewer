@@ -54,7 +54,7 @@ export default class DicomImageSequencer {
   fetchInstances(onImageReady) {
     for (const instance of this.instances) {
       // Add fetches and instances to respective queues
-      const imageURL = `https://healthcare.googleapis.com/v1/projects/${this.project}/locations/${this.location}/datasets/${this.dataset}/dicomStores/${this.dicomStore}/dicomWeb/studies/${this.study['0020000D'].Value[0]}/series/${this.series['0020000E'].Value[0]}/instances/${instance['00080018'].Value[0]}/rendered`;
+      const imageURL = `dicomImageLoader://healthcare.googleapis.com/v1/projects/${this.project}/locations/${this.location}/datasets/${this.dataset}/dicomStores/${this.dicomStore}/dicomWeb/studies/${this.study['0020000D'].Value[0]}/series/${this.series['0020000E'].Value[0]}/instances/${instance['00080018'].Value[0]}/frames/1`;
       this.instanceQueue.push(imageURL);
       this.fetchQueue.push(imageURL);
     }

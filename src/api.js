@@ -68,7 +68,7 @@ const fetchProjects = async (pageToken, projects) => {
   if (data.nextPageToken) {
     if (projects) {
       return fetchProjects(data.nextPageToken,
-          [...projects, ...data.projects]);
+        [...projects, ...data.projects]);
     }
     return fetchProjects(data.nextPageToken, data.projects);
   }
@@ -140,16 +140,16 @@ const fetchDicomStores = async (projectId, location, dataset) => {
  * @return {Promise<Object[]>} List of studies in the dicom store
  */
 const fetchStudies =
-async (projectId, location, dataset, dicomStore) => {
-  const endpoint =
-    `/v1/projects/${projectId}/locations/${location}/datasets/${dataset}` +
-    `/dicomStores/${dicomStore}/dicomWeb/studies`;
-  const response =
-    await authenticatedFetch(HEALTHCARE_API_BASE + endpoint);
-  const data = await response.json();
+  async (projectId, location, dataset, dicomStore) => {
+    const endpoint =
+      `/v1/projects/${projectId}/locations/${location}/datasets/${dataset}` +
+      `/dicomStores/${dicomStore}/dicomWeb/studies`;
+    const response =
+      await authenticatedFetch(HEALTHCARE_API_BASE + endpoint);
+    const data = await response.json();
 
-  return data;
-};
+    return data;
+  };
 
 /**
  * Fetches a list of series in a given project/location/dataset/dicomStore/study
@@ -161,16 +161,16 @@ async (projectId, location, dataset, dicomStore) => {
  * @return {Promise<Object[]>} List of series in the study
  */
 const fetchSeries =
-async (projectId, location, dataset, dicomStore, studyId) => {
-  const endpoint =
-    `/v1/projects/${projectId}/locations/${location}/datasets/${dataset}` +
-    `/dicomStores/${dicomStore}/dicomWeb/studies/${studyId}/series`;
-  const response =
-    await authenticatedFetch(HEALTHCARE_API_BASE + endpoint);
-  const data = await response.json();
+  async (projectId, location, dataset, dicomStore, studyId) => {
+    const endpoint =
+      `/v1/projects/${projectId}/locations/${location}/datasets/${dataset}` +
+      `/dicomStores/${dicomStore}/dicomWeb/studies/${studyId}/series`;
+    const response =
+      await authenticatedFetch(HEALTHCARE_API_BASE + endpoint);
+    const data = await response.json();
 
-  return data;
-};
+    return data;
+  };
 
 /**
  * Fetches a list of instances in a given
@@ -184,17 +184,17 @@ async (projectId, location, dataset, dicomStore, studyId) => {
  * @return {Promise<Object[]>} List of instances in the series
  */
 const fetchInstances =
-async (projectId, location, dataset, dicomStore, studyId, seriesId) => {
-  const endpoint =
-    `/v1/projects/${projectId}/locations/${location}/datasets` +
-    `/${dataset}/dicomStores/${dicomStore}/dicomWeb/studies/${studyId}` +
-    `/series/${seriesId}/instances`;
-  const response =
-    await authenticatedFetch(HEALTHCARE_API_BASE + endpoint);
-  const data = await response.json();
+  async (projectId, location, dataset, dicomStore, studyId, seriesId) => {
+    const endpoint =
+      `/v1/projects/${projectId}/locations/${location}/datasets` +
+      `/${dataset}/dicomStores/${dicomStore}/dicomWeb/studies/${studyId}` +
+      `/series/${seriesId}/instances`;
+    const response =
+      await authenticatedFetch(HEALTHCARE_API_BASE + endpoint);
+    const data = await response.json();
 
-  return data;
-};
+    return data;
+  };
 
 /**
  * Fetches a dicom file from a given url using Google Authentication
@@ -204,12 +204,17 @@ async (projectId, location, dataset, dicomStore, studyId, seriesId) => {
 const fetchDicomFile = async (url) => {
   const response = await authenticatedFetch(url, {
     headers: {
-      'Accept': 'application/dicom; transfer-syntax=*',
+      'Accept': 'multipart/related; type="application/octet-stream"; transfer-syntax=1.2.840.10008.1.2.1',
     },
   });
 
   const arrayBuffer = await response.arrayBuffer();
-  return new Uint8Array(arrayBuffer);
+  const dataView = new DataView(arrayBuffer, 143, arrayBuffer.byteLength - 143 - 67);
+  const byteArray = new Int16Array((arrayBuffer.byteLength - 143 - 67) / 2);
+  for (let i = 0; i < byteArray.length; i++) {
+    byteArray[i] = dataView.getInt16((i * 2) + 1);
+  }
+  return byteArray;
 };
 
 /**
@@ -229,10 +234,10 @@ const makeCancelable = (promise) => {
 
   const wrappedPromise = new Promise((resolve, reject) => {
     promise.then(
-        // eslint-disable-next-line prefer-promise-reject-errors
-        (val) => hasCanceled_ ? reject({isCanceled: true}) : resolve(val),
-        // eslint-disable-next-line prefer-promise-reject-errors
-        (error) => hasCanceled_ ? reject({isCanceled: true}) : reject(error),
+      // eslint-disable-next-line prefer-promise-reject-errors
+      (val) => hasCanceled_ ? reject({ isCanceled: true }) : resolve(val),
+      // eslint-disable-next-line prefer-promise-reject-errors
+      (error) => hasCanceled_ ? reject({ isCanceled: true }) : reject(error),
     );
   });
 
@@ -244,6 +249,8 @@ const makeCancelable = (promise) => {
   };
 };
 
-export {authenticatedFetch, fetchProjects, fetchLocations, fetchDatasets,
+export {
+  authenticatedFetch, fetchProjects, fetchLocations, fetchDatasets,
   fetchDicomStores, fetchStudies, fetchSeries, fetchInstances, fetchDicomFile,
-  makeCancelable};
+  makeCancelable
+};

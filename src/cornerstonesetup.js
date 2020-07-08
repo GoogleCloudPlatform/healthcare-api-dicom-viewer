@@ -8,7 +8,7 @@ cornerstoneWebImageLoader.configure({
   beforeSend: function(xhr) {
     const accessToken = auth.getAccessToken();
     xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
-    xhr.setRequestHeader('Accept', `image/png`);
+    xhr.setRequestHeader('Accept', `image/jpeg`);
   },
 });
 cornerstone.registerImageLoader('dicomImageLoader', dicomImageLoader.loadImage);
