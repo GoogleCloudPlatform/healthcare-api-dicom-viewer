@@ -1,7 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {Paper, Box, LinearProgress, Typography,
-  TextField, Button} from '@material-ui/core';
+import {
+  Paper, Box, LinearProgress, Typography,
+  TextField, Button
+} from '@material-ui/core';
 import * as cornerstone from 'cornerstone-core';
 import * as api from '../api.js';
 import DicomImageSequencer from '../dicomImageSequencer.js';
@@ -33,16 +35,16 @@ export default class Viewer extends React.Component {
     };
 
     this.dicomSequencer = new DicomImageSequencer(
-        this.props.project,
-        this.props.location,
-        this.props.dataset,
-        this.props.dicomStore,
-        this.props.study,
-        this.props.series,
+      this.props.project,
+      this.props.location,
+      this.props.dataset,
+      this.props.dicomStore,
+      this.props.study,
+      this.props.series,
     );
 
     this.renderStartTime = 0,
-    this.readyImages = [];
+      this.readyImages = [];
     this.readyImagesCount = 0;
     this.newSequence = false;
     this.canvasElement;
@@ -55,7 +57,7 @@ export default class Viewer extends React.Component {
   componentDidMount() {
     cornerstone.enable(this.canvasElement);
     this.canvasElement.addEventListener('cornerstoneimagerendered',
-        this.onImageRendered.bind(this));
+      this.onImageRendered.bind(this));
     this.getInstances();
   }
 
@@ -74,10 +76,20 @@ export default class Viewer extends React.Component {
     this.readyImages.push(image);
     this.readyImagesCount++;
 
-    if (this.newSequence /* && (this.readyImagesCount > this.state.instances.length / 5) */ ) {
+    if (this.newSequence /* && (this.readyImagesCount > this.state.instances.length / 5) */) {
       // If this is the first image in the sequence, render immediately
       this.displayNextImage();
       this.newSequence = false;
+    }
+
+    if (this.readyImagesCount == 1) {
+      this.renderStartTime = Date.now();
+    } else if (this.readyImagesCount == this.state.instances.length) {
+      this.setState({
+        totalRenderTime: Date.now() - this.renderStartTime,
+        numReadyImages: this.readyImagesCount,
+        numRenderedImages: this.numRenderedImages,
+      });
     }
   }
 
@@ -93,6 +105,8 @@ export default class Viewer extends React.Component {
     } else if (this.renderedImagesCount == this.state.instances.length) {
       this.setState({
         totalRenderTime: Date.now() - this.renderStartTime,
+        numReadyImages: this.readyImagesCount,
+        numRenderedImages: this.numRenderedImages,
       });
     }
 
@@ -128,7 +142,7 @@ export default class Viewer extends React.Component {
     });
 
     this.dicomSequencer.maxSimultaneousRequests =
-        this.state.maxSimultaneousRequests;
+      this.state.maxSimultaneousRequests;
     this.dicomSequencer.setInstances(this.state.instances);
     this.dicomSequencer.fetchInstances(this.onImageReady.bind(this));
   }
@@ -138,24 +152,24 @@ export default class Viewer extends React.Component {
    */
   async getInstances() {
     this.getInstancesPromise = api.makeCancelable(
-        api.fetchInstances(
-            this.props.project, this.props.location,
-            this.props.dataset, this.props.dicomStore,
-            this.props.study['0020000D'].Value[0],
-            this.props.series['0020000E'].Value[0],
-        ));
+      api.fetchInstances(
+        this.props.project, this.props.location,
+        this.props.dataset, this.props.dicomStore,
+        this.props.study['0020000D'].Value[0],
+        this.props.series['0020000E'].Value[0],
+      ));
 
     this.getInstancesPromise.promise
-        .then((instances) => {
-          this.setState({
-            instances,
-          });
-        })
-        .catch((reason) => {
-          if (!reason.isCanceled) {
-            console.error(reason);
-          }
+      .then((instances) => {
+        this.setState({
+          instances,
         });
+      })
+      .catch((reason) => {
+        if (!reason.isCanceled) {
+          console.error(reason);
+        }
+      });
   }
 
   /**
@@ -170,7 +184,7 @@ export default class Viewer extends React.Component {
             ref={(input) => {
               this.canvasElement = input;
             }}
-            style={{width: 500, height: 500}}>
+            style={{ width: 500, height: 500 }}>
             <canvas className="cornerstone-canvas"></canvas>
           </div>
           <LinearProgress variant="buffer"
@@ -179,14 +193,14 @@ export default class Viewer extends React.Component {
           <TextField label="Max Simultaneous Requests"
             defaultValue={this.state.maxSimultaneousRequests}
             onChange={(e) => {
-              this.setState({maxSimultaneousRequests: Number(e.target.value)});
+              this.setState({ maxSimultaneousRequests: Number(e.target.value) });
             }} />
           <Button
             variant="contained"
             color="primary"
             disabled={this.state.instances.length == 0}
             onClick={this.startDisplayingInstances.bind(this)}>
-              Start
+            Start
           </Button>
           <Typography variant="h5">
             Frames Loaded: {this.state.numReadyImages}
@@ -195,13 +209,13 @@ export default class Viewer extends React.Component {
             Frames Displayed: {this.state.numRenderedImages}
           </Typography>
           {this.state.totalRenderTime > 0 ?
-          <Typography variant="h5">
-            Time: {this.state.totalRenderTime / 1000}s
+            <Typography variant="h5">
+              Time: {this.state.totalRenderTime / 1000}s
           </Typography> : null}
           {this.state.totalRenderTime > 0 ?
-          <Typography variant="h5">
-            Average FPS: {this.state.instances.length / (this.state.totalRenderTime / 1000)}
-          </Typography> : null}
+            <Typography variant="h5">
+              Average FPS: {this.state.instances.length / (this.state.totalRenderTime / 1000)}
+            </Typography> : null}
         </Box>
       </Paper>
     );

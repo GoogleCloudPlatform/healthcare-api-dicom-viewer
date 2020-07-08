@@ -32,6 +32,11 @@
     "@types/react": "^16.9.35",
     "cornerstone-core": "^2.3.0",
     "cornerstone-tools": "^4.15.2",
+<<<<<<< HEAD
+=======
+    "cornerstone-wado-image-loader": "^3.1.2",
+    "cornerstone-web-image-loader": "^2.1.1",
+>>>>>>> jpeg-loading
     "dicom-parser": "^1.8.5",
     "lodash": "^4.17.15",
     "prop-types": "^15.7.2",
