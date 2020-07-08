@@ -4,5 +4,3 @@ dist/*
 !dist/index.html
 
 .vscode/
-
-src/config.js
