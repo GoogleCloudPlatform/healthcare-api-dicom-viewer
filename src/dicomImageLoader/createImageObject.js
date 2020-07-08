@@ -14,7 +14,7 @@ const createImageObjectFromDicom = (imageId, dicomByteArray) => {
   const height = dataSet.uint16('x00280010');
 
   const photoInterp = dataSet.string('x00280004');
-  const invert = photoInterp == 'MONOCHROME1' ? true: false;
+  const invert = photoInterp == 'MONOCHROME1' ? true : false;
 
   // Get pixel data from dicomParser
   const pixelDataElement = dataSet.elements.x7fe00010;
