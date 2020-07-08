@@ -2,7 +2,7 @@
 
 /** Client ID for this application in Google Cloud
  * @constant @type {string} */
-export const CLIENT_ID = '485533938322-72mcbc75qib3sg3ms71otq4poebelnio.apps.googleusercontent.com';
+export const CLIENT_ID = 'YOUR_CLIENT_ID';
 
 /** Base url for the cloud resource manager api endpoints
  * @constant @type {string} */

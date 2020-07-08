@@ -204,16 +204,18 @@ const fetchInstances =
 const fetchDicomFile = async (url) => {
   const response = await authenticatedFetch(url, {
     headers: {
-      'Accept': 'multipart/related; type="application/octet-stream"; transfer-syntax=1.2.840.10008.1.2.1',
+      'Accept': 'multipart/related; type="application/dicom"; transfer-syntax=1.2.840.10008.1.2.1',
     },
   });
 
-  const arrayBuffer = await response.arrayBuffer();
-  const dataView = new DataView(arrayBuffer, 143, arrayBuffer.byteLength - 143 - 67);
-  const byteArray = new Int16Array((arrayBuffer.byteLength - 143 - 67) / 2);
-  for (let i = 0; i < byteArray.length; i++) {
-    byteArray[i] = dataView.getInt16((i * 2) + 1);
-  }
+  let arrayBuffer = await response.arrayBuffer();
+  // Strip multipart header from arrayBuffer
+  arrayBuffer = arrayBuffer.slice(136, arrayBuffer.byteLength - 68);
+  const byteArray = new Uint8Array(arrayBuffer);
+  // console.log(byteArray);
+  // for(let i = 525300; i < byteArray.length; i++) {
+  //   console.log(`${i}: ${byteArray[i]}, ${String.fromCharCode(byteArray[i])}`);
+  // }
   return byteArray;
 };
 

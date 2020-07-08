@@ -8,41 +8,39 @@ import * as dicomParser from 'dicom-parser';
  */
 const createImageObjectFromDicom = (imageId, dicomByteArray) => {
   // Parse dicom data to retrieve image values
-  // const dataSet = dicomParser.parseDicom(dicomByteArray);
+  const dataSet = dicomParser.parseDicom(dicomByteArray);
 
-  const width = 512;
-  const height = 512;
+  const width = dataSet.uint16('x00280011');
+  const height = dataSet.uint16('x00280010');
 
-  // const photoInterp = dataSet.string('x00280004');
-  const invert = false;
+  const photoInterp = dataSet.string('x00280004');
+  const invert = photoInterp == 'MONOCHROME1' ? true: false;
 
-  // // Get pixel data from dicomParser
-  // const pixelDataElement = dataSet.elements.x7fe00010;
-  // const pixelData = new Int16Array(dataSet.byteArray.buffer,
-  //     pixelDataElement.dataOffset);
-  
-  // console.log(pixelData);
+  // Get pixel data from dicomParser
+  const pixelDataElement = dataSet.elements.x7fe00010;
+  const pixelData = new Int16Array(dataSet.byteArray.buffer,
+      pixelDataElement.dataOffset);
 
-  const getPixelData = () => dicomByteArray;
+  const getPixelData = () => pixelData;
 
   // Calculate min pixel value if not provided in dicom file
-  let minPixelValue;
+  let minPixelValue = dataSet.int16('x00280106');
   if (!minPixelValue) {
-    minPixelValue = dicomByteArray[0];
-    for (let i = 1; i < dicomByteArray.length; i++) {
-      if (dicomByteArray[i] < minPixelValue) {
-        minPixelValue = dicomByteArray[i];
+    minPixelValue = pixelData[0];
+    for (let i = 1; i < pixelData.length; i++) {
+      if (pixelData[i] < minPixelValue) {
+        minPixelValue = pixelData[i];
       }
     }
   }
 
   // Calculate max pixel value if not provided in dicom file
-  let maxPixelValue;
+  let maxPixelValue = dataSet.int16('x00280107');
   if (!maxPixelValue) {
-    maxPixelValue = dicomByteArray[0];
-    for (let i = 1; i < dicomByteArray.length; i++) {
-      if (dicomByteArray[i] > maxPixelValue) {
-        maxPixelValue = dicomByteArray[i];
+    maxPixelValue = pixelData[0];
+    for (let i = 1; i < pixelData.length; i++) {
+      if (pixelData[i] > maxPixelValue) {
+        maxPixelValue = pixelData[i];
       }
     }
   }
