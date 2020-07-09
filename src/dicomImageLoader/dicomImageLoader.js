@@ -9,6 +9,7 @@ const defaultConfig = {
 };
 const config = Object.assign({}, defaultConfig);
 const workerManager = new DicomWorkerManager();
+let onImageFetch = () => {};
 
 /**
  * Change configuration value for the dicomImageLoader
@@ -20,6 +21,15 @@ const workerManager = new DicomWorkerManager();
  */
 const configure = (newConfig) => {
   Object.assign(config, defaultConfig, newConfig);
+};
+
+/**
+ * Sets the function to run when an image has been fetched
+ * @param {function(): any} onFetch Function run when an image
+ *    has been fetched
+ */
+const onFetch = (onFetch) => {
+  onImageFetch = onFetch;
 };
 
 /**
@@ -43,6 +53,8 @@ const loadImage = (imageId) => {
     }
 
     fetchDicomPromise.then((byteArray) => {
+      onImageFetch();
+
       // Create cornerstone image object with or without webworkers
       if (config.useWebworkersToParse) {
         workerManager.createImage(imageId, byteArray).then((image) => {
@@ -61,4 +73,4 @@ const loadImage = (imageId) => {
   };
 };
 
-export {loadImage, configure, createImageObjectFromDicom};
+export {loadImage, configure, createImageObjectFromDicom, onFetch};

@@ -1,4 +1,5 @@
 import * as cornerstone from 'cornerstone-core';
+import * as dicomImageLoader from './dicomImageLoader/dicomImageLoader.js';
 
 /**
  * @callback onImageReady
@@ -59,6 +60,13 @@ export default class DicomImageSequencer {
       this.fetchQueue.push(imageURL);
     }
 
+    // Check fetch queue after image loader finishes
+    // fetching each instance
+    dicomImageLoader.onFetch(() => {
+      this.currentSimultaneousRequests--;
+      this.checkFetchQueue(onImageReady);
+    });
+
     // Begin making fetch requests
     this.checkFetchQueue(onImageReady);
   }
@@ -103,10 +111,6 @@ export default class DicomImageSequencer {
           // Store loaded image and check the instance queue
           this.loadedImages[image.imageId] = image;
           this.checkInstanceQueue(onImageReady);
-
-          // Make a new request available and check the fetch queue
-          this.currentSimultaneousRequests--;
-          this.checkFetchQueue(onImageReady);
         });
       }
     }
