@@ -39,9 +39,8 @@ export default function Viewer(
   const getInstances = () => {
     const accessToken = auth.getAccessToken();
     if (accessToken) {
-      fetch('http://localhost:2000/?url=' +
-        encodeURIComponent(`https://healthcare.googleapis.com/v1/projects/${project}/locations/${location}/datasets/${dataset}/dicomStores/${dicomStore}/dicomWeb/studies/${study['0020000D'].Value[0]}/series/${series['0020000E'].Value[0]}/instances` +
-        `?access_token=${accessToken}&includefield=all`))
+      fetch(`https://healthcare.googleapis.com/v1/projects/${project}/locations/${location}/datasets/${dataset}/dicomStores/${dicomStore}/dicomWeb/studies/${study['0020000D'].Value[0]}/series/${series['0020000E'].Value[0]}/instances` +
+        `?access_token=${accessToken}&includefield=all`)
           .then((response) => response.json())
           .then((data) => {
             setInstances(data);
@@ -56,9 +55,8 @@ export default function Viewer(
   const loadFirstInstance = () => {
     const accessToken = auth.getAccessToken();
     if (accessToken) {
-      fetch('http://localhost:2000/?url=' +
-          encodeURIComponent(`https://healthcare.googleapis.com/v1/projects/${project}/locations/${location}/datasets/${dataset}/dicomStores/${dicomStore}/dicomWeb/studies/${study['0020000D'].Value[0]}/series/${series['0020000E'].Value[0]}/instances/${instances[0]['00080018'].Value[0]}` +
-            `?access_token=${accessToken}`))
+      fetch(`https://healthcare.googleapis.com/v1/projects/${project}/locations/${location}/datasets/${dataset}/dicomStores/${dicomStore}/dicomWeb/studies/${study['0020000D'].Value[0]}/series/${series['0020000E'].Value[0]}/instances/${instances[0]['00080018'].Value[0]}` +
+            `?access_token=${accessToken}`)
           .then((response) => response.text())
           .then((data) => {
             console.log(data);
@@ -66,15 +64,6 @@ export default function Viewer(
           .catch((error) => {
             console.error(error);
           });
-      // console.log(instances[0]);
-      // const imageURL = `wadouri:https://healthcare.googleapis.com/v1/projects/${project}/locations/${location}/datasets/${dataset}/dicomStores/${dicomStore}/dicomWeb/studies/${study['0020000D'].Value[0]}/series/${series['0020000E'].Value[0]}/instances/${instances[0]['00080018'].Value[0]}` +
-      // `?access_token=${accessToken}`;
-
-      // console.log(imageURL);
-
-      // cornerstone.loadImage(imageURL).then(function(image) {
-      //   cornerstone.displayImage(canvasRef.current, image);
-      // });
     }
   };
 
