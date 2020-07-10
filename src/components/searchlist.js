@@ -63,6 +63,9 @@ export default function SearchList({items, onClickItem, isLoading}) {
     };
   }, []);
 
+  /**
+   * Runs when user scrolls page
+   */
   const onScroll = () => {
     // Check if search list bottom is visible on page
     const searchList = document.getElementById('search-list');
@@ -72,6 +75,11 @@ export default function SearchList({items, onClickItem, isLoading}) {
     }
   };
 
+  /**
+   * Handles a change in search query
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} event
+   * onChange event
+   */
   const handleSearch = (event) => {
     event.persist();
 

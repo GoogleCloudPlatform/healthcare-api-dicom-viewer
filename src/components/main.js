@@ -4,6 +4,7 @@ import {Typography, Breadcrumbs, Link, Box} from '@material-ui/core';
 import * as auth from '../auth.js';
 import * as api from '../api.js';
 import SearchList from './searchlist.js';
+import Viewer from './viewer.js';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -65,11 +66,19 @@ export default function Main() {
     }
   }, []);
 
+  /**
+   * Signs the user in with Google
+   */
   const signIn = () => {
     auth.signInToGoogle();
   };
 
-  // Generic flow for populating data into our react component
+  /**
+   * Generic flow for populating data into our react component
+   * @param {function(): Promise<any>} apiCall Async function to retrieve data
+   * @param {function(boolean): any} setLoading Function to set loading state
+   * @param {function(any): any} setData Function to set data state
+   */
   const loadData = async (apiCall, setLoading, setData) => {
     setLoading(true);
     try {
@@ -119,26 +128,46 @@ export default function Main() {
         displayValue: series['0008103E'].Value[0]}));
     }, setSeriesLoading, setSeries);
 
+  /**
+   * Sets project state and begins loading locations
+   * @param {string} projectId Project ID
+   */
   const selectProject = (projectId) => {
     setSelectedProject(projectId);
     loadLocations(projectId);
   };
 
+  /**
+   * Sets location state and begins loading datasets
+   * @param {string} locationId Location ID
+   */
   const selectLocation = (locationId) => {
     setSelectedLocation(locationId);
     loadDatasets(selectedProject, locationId);
   };
 
+  /**
+   * Sets dataset state and begins loading dicom stores
+   * @param {string} dataset Dataset name
+   */
   const selectDataset = (dataset) => {
     setSelectedDataset(dataset);
     loadDicomStores(selectedProject, selectedLocation, dataset);
   };
 
+  /**
+   * Sets dicomStore state and begins loading studies
+   * @param {string} dicomStore DicomStore name
+   */
   const selectDicomStore = (dicomStore) => {
     setSelectedDicomStore(dicomStore);
     loadStudies(selectedProject, selectedLocation, selectedDataset, dicomStore);
   };
 
+  /**
+   * Sets study state and begins loading series
+   * @param {Object} study Study object
+   */
   const selectStudy = (study) => {
     setSelectedStudy(study);
 
@@ -146,6 +175,10 @@ export default function Main() {
         selectedDicomStore, study['0020000D'].Value[0]);
   };
 
+  /**
+   * Sets series state
+   * @param {Object} series Series object
+   */
   const selectSeries = (series) => {
     setSelectedSeries(series);
   };
@@ -163,6 +196,9 @@ export default function Main() {
     loadProjects();
   };
 
+  /**
+   * Clears all state up to and including location
+   */
   const clearLocation = () => {
     setSelectedLocation(null);
 
@@ -281,15 +317,6 @@ export default function Main() {
                 </Typography> : null}
           </Breadcrumbs>
         </Box>
-        {/* <Box>
-          {auth.getAccessToken() ?
-              <Button variant="contained" color="primary" onClick={signOut}>
-                Logout
-              </Button> :
-              <Button variant="contained" color="primary" onClick={signIn}>
-                Login to Google
-              </Button>}
-        </Box> */}
       </Box>
 
       {!selectedProject ?
@@ -322,6 +349,14 @@ export default function Main() {
           items={series}
           onClickItem={selectSeries}
           isLoading={seriesLoading} /> : null}
+      {selectedSeries ?
+        <Viewer
+          project={selectedProject}
+          location={selectedLocation}
+          dataset={selectedDataset}
+          dicomStore={selectedDicomStore}
+          study={selectedStudy}
+          series={selectedSeries} /> : null}
     </div >
   );
 }
