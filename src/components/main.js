@@ -4,7 +4,6 @@ import {Typography, Breadcrumbs, Link, Box} from '@material-ui/core';
 import * as auth from '../auth.js';
 import * as api from '../api.js';
 import SearchList from './searchlist.js';
-import Viewer from './viewer.js';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -323,14 +322,6 @@ export default function Main() {
           items={series}
           onClickItem={selectSeries}
           isLoading={seriesLoading} /> : null}
-      {selectedSeries ?
-        <Viewer
-          project={selectedProject}
-          location={selectedLocation}
-          dataset={selectedDataset}
-          dicomStore={selectedDicomStore}
-          study={selectedStudy}
-          series={selectedSeries} /> : null}
     </div >
   );
 }
