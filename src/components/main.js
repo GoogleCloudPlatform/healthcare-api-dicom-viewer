@@ -289,15 +289,6 @@ export default function Main() {
                 </Typography> : null}
           </Breadcrumbs>
         </Box>
-        {/* <Box>
-          {auth.getAccessToken() ?
-              <Button variant="contained" color="primary" onClick={signOut}>
-                Logout
-              </Button> :
-              <Button variant="contained" color="primary" onClick={signIn}>
-                Login to Google
-              </Button>}
-        </Box> */}
       </Box>
 
       {!selectedProject ?
