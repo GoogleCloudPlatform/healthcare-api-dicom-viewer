@@ -39,7 +39,7 @@ const authenticatedFetch = async (url) => {
  * Fetches a list of the users google cloud projects recursively
  * @param {string=} pageToken Page token to use for the request
  * @param {Array=} projects Projects fetched from a previous iteration
- * @return {Array<string>} List of projects available to the user
+ * @return {Promise<Array<string>>} List of projects available to the user
  */
 const fetchProjects = async (pageToken, projects) => {
   const endpoint = '/v1/projects' +
@@ -68,7 +68,7 @@ const fetchProjects = async (pageToken, projects) => {
 /**
  * Fetches a list of the possible locations for a given project
  * @param {string} projectId Project id to search locations for
- * @return {Array<string>} List of locations available for project
+ * @return {Promise<Array<string>>} List of locations available for project
  */
 const fetchLocations = async (projectId) => {
   const endpoint = `/v1beta1/projects/${projectId}/locations`;
@@ -84,7 +84,7 @@ const fetchLocations = async (projectId) => {
  * Fetches a list of the datasets in a given project/location
  * @param {string} projectId Project id
  * @param {string} location Location
- * @return {Array<string>} List of datasets available
+ * @return {Promise<Array<string>>} List of datasets available
  */
 const fetchDatasets = async (projectId, location) => {
   // TODO: Handle page tokens
@@ -102,7 +102,7 @@ const fetchDatasets = async (projectId, location) => {
  * @param {string} projectId Project ID
  * @param {string} location Location
  * @param {string} dataset Dataset
- * @return {Array<string>} List of dicomStores available
+ * @return {Promise<Array<string>>} List of dicomStores available
  */
 const fetchDicomStores = async (projectId, location, dataset) => {
   // TODO: Handle page tokens
@@ -124,7 +124,7 @@ const fetchDicomStores = async (projectId, location, dataset) => {
  * @param {string} location Location
  * @param {string} dataset Dataset
  * @param {string} dicomStore Dicom Store
- * @return {Array<Object>} List of studies in the dicom store
+ * @return {Promise<Array<Object>>} List of studies in the dicom store
  */
 const fetchStudies =
 async (projectId, location, dataset, dicomStore) => {
@@ -145,7 +145,7 @@ async (projectId, location, dataset, dicomStore) => {
  * @param {string} dataset Dataset
  * @param {string} dicomStore Dicom Store
  * @param {string} studyId Study UID
- * @return {Array<Object>} List of series in the study
+ * @return {Promise<Array<Object>>} List of series in the study
  */
 const fetchSeries =
 async (projectId, location, dataset, dicomStore, studyId) => {
