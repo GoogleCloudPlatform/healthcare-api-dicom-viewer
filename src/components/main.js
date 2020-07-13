@@ -119,26 +119,32 @@ export default function Main() {
         displayValue: series['0008103E'].Value[0]}));
     }, setSeriesLoading, setSeries);
 
+  // Methods for selecting a list item and loading data for the next list
+  /** @param {string} projectId Project to select */
   const selectProject = (projectId) => {
     setSelectedProject(projectId);
     loadLocations(projectId);
   };
 
+  /** @param {string} locationId Location to select */
   const selectLocation = (locationId) => {
     setSelectedLocation(locationId);
     loadDatasets(selectedProject, locationId);
   };
 
+  /** @param {string} dataset Dataset to select */
   const selectDataset = (dataset) => {
     setSelectedDataset(dataset);
     loadDicomStores(selectedProject, selectedLocation, dataset);
   };
 
+  /** @param {string} dicomStore Dicom Store to select */
   const selectDicomStore = (dicomStore) => {
     setSelectedDicomStore(dicomStore);
     loadStudies(selectedProject, selectedLocation, selectedDataset, dicomStore);
   };
 
+  /** @param {Object} study Study to select */
   const selectStudy = (study) => {
     setSelectedStudy(study);
 
@@ -146,6 +152,7 @@ export default function Main() {
         selectedDicomStore, study['0020000D'].Value[0]);
   };
 
+  /** @param {Object} series Series to select */
   const selectSeries = (series) => {
     setSelectedSeries(series);
   };
@@ -163,6 +170,7 @@ export default function Main() {
     loadProjects();
   };
 
+  /** Clears all state up to and including location */
   const clearLocation = () => {
     setSelectedLocation(null);
 
@@ -215,7 +223,7 @@ export default function Main() {
         selectedDataset, selectedDicomStore);
   };
 
-  /** Clears series state */
+  /** Clears all state up to and including series */
   const clearSeries = () => {
     setSelectedSeries(null);
   };
