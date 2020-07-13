@@ -78,18 +78,6 @@ api.fetchSeries.mockResolvedValue([{
   },
 }]);
 
-// fetchInstances will resolve 1 fake instance
-api.fetchInstances.mockResolvedValue([{
-  '00080016': {
-    vr: 'UI',
-    Value: ['instance1-UID'],
-  },
-  '00200013': {
-    vr: 'IS',
-    Value: [1],
-  },
-}]);
-
 // eslint-disable-next-line max-len
 test('User can navigate between project, location, dataset, dicomStore, study, and series', async () => {
   render(
