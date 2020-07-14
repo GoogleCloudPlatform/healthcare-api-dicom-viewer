@@ -105,7 +105,7 @@ export default function Main() {
 
       // Add a new field "displayValue" to each study for the SearchList
       return data.map((study) => ({...study,
-        displayValue: study['00100010'].Value[0].Alphabetic}));
+        displayValue: study['00100020'].Value[0]}));
     }, setStudiesLoading, setStudies);
 
   const loadSeries =
