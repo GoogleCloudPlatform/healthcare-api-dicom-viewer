@@ -25,7 +25,7 @@ const authenticatedFetch = async (url) => {
       if (response.status == 401) {
         auth.signInToGoogle();
       } else {
-        throw new Error(response.json());
+        throw new Error(await response.text());
       }
     }
 
@@ -159,5 +159,5 @@ async (projectId, location, dataset, dicomStore, studyId) => {
   return data;
 };
 
-export {fetchProjects, fetchLocations, fetchDatasets, fetchDicomStores,
-  fetchStudies, fetchSeries};
+export {authenticatedFetch, fetchProjects, fetchLocations, fetchDatasets,
+  fetchDicomStores, fetchStudies, fetchSeries};
