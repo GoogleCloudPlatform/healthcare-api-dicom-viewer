@@ -28,7 +28,6 @@
   "dependencies": {
     "@babel/runtime": "^7.10.2",
     "@material-ui/core": "^4.10.1",
-    "@material-ui/icons": "^4.9.1",
     "@types/react": "^16.9.35",
     "cornerstone-core": "^2.3.0",
     "cornerstone-tools": "^4.15.2",
