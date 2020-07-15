@@ -7,7 +7,7 @@ import {
 } from './config.js';
 
 /**
- * Fetches a url using an access token, signing the user in
+ * Fetches a url using a stored access token, signing the user in
  * if no access token exists
  * @param {string} url The url to fetch
  * @return {Promise<Response>} Fetch response object
@@ -48,8 +48,8 @@ const fetchProjects = async (pageToken, projects) => {
     await authenticatedFetch(CLOUD_RESOURCE_MANAGER_API_BASE + endpoint);
   const data = await response.json();
 
-  // If next page token is present in the response, fetch again with
-  // current project list
+  // If next page token is present in the response, fetch again and
+  // pass along the current project list
   if (data.nextPageToken) {
     if (projects) {
       return fetchProjects(data.nextPageToken,
@@ -81,7 +81,7 @@ const fetchLocations = async (projectId) => {
 };
 
 /**
- * Fetches a list of the datasets in a given project/location
+ * Fetches a list of the datasets in a project location
  * @param {string} projectId Project id
  * @param {string} location Location
  * @return {Promise<Array<string>>} List of datasets available
@@ -98,7 +98,7 @@ const fetchDatasets = async (projectId, location) => {
 };
 
 /**
- * Fetches a list of the dicomStores in a given project/location/dataset
+ * Fetches a list of the dicomStores in a dataset
  * @param {string} projectId Project ID
  * @param {string} location Location
  * @param {string} dataset Dataset
@@ -119,7 +119,7 @@ const fetchDicomStores = async (projectId, location, dataset) => {
 };
 
 /**
- * Fetches a list of studies in a given project/location/dataset/dicomStore
+ * Fetches a list of studies in a dicom store
  * @param {string} projectId Project ID
  * @param {string} location Location
  * @param {string} dataset Dataset
@@ -139,7 +139,7 @@ async (projectId, location, dataset, dicomStore) => {
 };
 
 /**
- * Fetches a list of series in a given project/location/dataset/dicomStore/study
+ * Fetches a list of series in a study
  * @param {string} projectId Project ID
  * @param {string} location Location
  * @param {string} dataset Dataset
