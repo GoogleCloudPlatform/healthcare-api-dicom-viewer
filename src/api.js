@@ -37,7 +37,7 @@ const authenticatedFetch = async (url) => {
 // TODO: Add ability to filter by search query, to
 //       later implement with navigation views
 /**
- * Fetches a list of the users google cloud projects recursively
+ * Fetches a list of the user's google cloud projects recursively
  * @param {string=} pageToken Page token to use for the request
  * @param {Array=} projects Projects fetched from a previous iteration
  * @return {Promise<Array<string>>} List of projects available to the user
@@ -128,7 +128,7 @@ const fetchDicomStores = async (projectId, location, dataset) => {
  * @return {Promise<Array<Object>>} List of studies in the dicom store
  */
 const fetchStudies =
-async (projectId, location, dataset, dicomStore) => {
+    async (projectId, location, dataset, dicomStore) => {
   const endpoint =
     `/v1/projects/${projectId}/locations/${location}/datasets/${dataset}` +
     `/dicomStores/${dicomStore}/dicomWeb/studies`;
@@ -149,7 +149,7 @@ async (projectId, location, dataset, dicomStore) => {
  * @return {Promise<Array<Object>>} List of series in the study
  */
 const fetchSeries =
-async (projectId, location, dataset, dicomStore, studyId) => {
+    async (projectId, location, dataset, dicomStore, studyId) => {
   const endpoint =
     `/v1/projects/${projectId}/locations/${location}/datasets/${dataset}` +
     `/dicomStores/${dicomStore}/dicomWeb/studies/${studyId}/series`;

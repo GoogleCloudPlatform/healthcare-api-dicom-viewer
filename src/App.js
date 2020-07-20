@@ -32,7 +32,6 @@ export default function App() {
     if (url) {
       try {
         const result = await api.authenticatedFetch(url);
-        console.log('test');
         setFetchResult(await result.text());
         setIsError(false);
       } catch (error) {
