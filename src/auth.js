@@ -4,6 +4,10 @@ import {CLIENT_ID} from './config.js';
 // eslint-disable-next-line no-var
 let GoogleAuth;
 const SCOPE = 'https://www.googleapis.com/auth/cloud-healthcare https://www.googleapis.com/auth/cloud-platform';
+const DISCOVERY_DOCS = [
+  'https://cloudresourcemanager.googleapis.com/$discovery/rest?version=v1',
+  'https://healthcare.googleapis.com/$discovery/rest?version=v1beta1',
+];
 
 let onInitializedCallback = () => {};
 
@@ -16,11 +20,11 @@ const initClient = () => {
   gapi.client.init({
     'clientId': CLIENT_ID,
     'scope': SCOPE,
+    'discoveryDocs': DISCOVERY_DOCS,
     'ux_mode': 'redirect',
     'redirect_uri': redirectUri,
   }).then(function() {
     GoogleAuth = gapi.auth2.getAuthInstance();
-
     onInitializedCallback();
   });
 };
