@@ -1,6 +1,8 @@
 /** @module auth */
 import {CLIENT_ID} from './config.js';
 
+// TODO: Use the Google OAuth2.0 javascript library instead
+
 /**
  * Redirect to Google OAuth2 sign-in page
  */

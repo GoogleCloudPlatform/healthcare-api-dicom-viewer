@@ -34,6 +34,8 @@ const authenticatedFetch = async (url) => {
   }
 };
 
+// TODO: Add ability to filter by search query, to
+//       later implement with navigation views
 /**
  * Fetches a list of the users google cloud projects recursively
  * @param {string=} pageToken Page token to use for the request
