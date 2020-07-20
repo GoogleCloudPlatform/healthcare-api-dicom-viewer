@@ -55,18 +55,28 @@ export default function Main() {
   /* On mount, check if user is signed in already or not
   by checking for an access token in local storage */
   useEffect(() => {
-    const signedIn = Boolean(auth.getAccessToken());
-    setIsSignedIn(signedIn);
+    // Load GooglAuth library on mount
+    gapi.load('client:auth2', auth.initClient);
+    auth.onInitialized(() => {
+      // Set up listener to listen to signed in state changes
+      auth.onSignedInChanged((isSignedIn) => {
+        setIsSignedIn(isSignedIn);
+      });
 
-    if (signedIn) {
-      loadProjects();
-    } else {
-      signIn();
-    }
+      // Check if user is already signed in on page load
+      const signedIn = auth.isSignedIn();
+      setIsSignedIn(signedIn);
+
+      if (signedIn) {
+        loadProjects();
+      } else {
+        signIn();
+      }
+    });
   }, []);
 
   const signIn = () => {
-    auth.signInToGoogle();
+    auth.signIn();
   };
 
   // Generic flow for populating data into our react component
