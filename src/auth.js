@@ -1,7 +1,7 @@
 /** @module auth */
 import {CLIENT_ID} from './config.js';
 
-const REDIRECT_URI = window.location.href;
+// TODO: Use the Google OAuth2.0 javascript library instead
 
 /**
  * Redirect to Google OAuth2 sign-in page
@@ -9,6 +9,7 @@ const REDIRECT_URI = window.location.href;
 const signInToGoogle = () => {
   // Google's OAuth 2.0 endpoint for requesting an access token
   const oauth2Endpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
+  const redirectUri = window.location.href;
 
   // Create element to open OAuth 2.0 endpoint in new window.
   const form = document.createElement('form');
@@ -18,7 +19,7 @@ const signInToGoogle = () => {
   // Parameters to pass to OAuth 2.0 endpoint.
   const params = {
     'client_id': CLIENT_ID,
-    'redirect_uri': REDIRECT_URI,
+    'redirect_uri': redirectUri,
     'scope': 'https://www.googleapis.com/auth/cloud-healthcare https://www.googleapis.com/auth/cloud-platform',
     'include_granted_scopes': 'true',
     'response_type': 'token',
