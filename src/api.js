@@ -72,13 +72,12 @@ const fetchProjects = async (pageToken, projects) => {
  * @return {Promise<Array<string>>} List of locations available for project
  */
 const fetchLocations = async (projectId) => {
-  const endpoint = `/v1beta1/projects/${projectId}/locations`;
-  const response =
-    await authenticatedFetch(HEALTHCARE_API_BASE + endpoint);
-  const data = await response.json();
+  const data = await gapi.client.healthcare.projects.locations.list({
+    name: `projects/${projectId}`,
+  });
 
   // Return a list of location Id's
-  return data.locations.map((location) => location.locationId);
+  return data.body.locations.map((location) => location.locationId);
 };
 
 /**
