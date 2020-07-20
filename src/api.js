@@ -22,7 +22,7 @@ const authenticatedFetch = async (url) => {
 
     if (!response.ok) {
       if (response.status == 401) {
-        auth.signInToGoogle();
+        auth.signIn();
       } else {
         throw new Error(await response.text());
       }
@@ -30,7 +30,7 @@ const authenticatedFetch = async (url) => {
 
     return response;
   } else {
-    auth.signInToGoogle();
+    auth.signIn();
   }
 };
 

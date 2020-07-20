@@ -8,24 +8,39 @@ import * as api from './api.js';
  * @return {ReactComponent} <App/>
  */
 export default function App() {
+  const [isAuthInitialized, setIsAuthInitialized] = useState(false);
+  const [isSignedIn, setIsSignedIn] = useState(false);
   const [accessToken, setAccessToken] = useState(null);
   const [url, setUrl] = useState('');
   const [fetchResult, setFetchResult] = useState('');
   const [isError, setIsError] = useState(false);
 
-  // When this react component is mounted, check the
-  // access token to see if user is signed in or not
+  // When this react component is mounted, load GoogleAuth
+  // library and initialize listeners
   useEffect(() => {
-    setAccessToken(auth.getAccessToken());
+    // Load GooglAuth library on mount
+    gapi.load('client:auth2', auth.initClient);
+    auth.onInitialized(() => {
+      setIsAuthInitialized(true);
+
+      // Set up listener to listen to signed in state changes
+      auth.onSignedInChanged((isSignedIn) => {
+        setIsSignedIn(isSignedIn);
+        setAccessToken(auth.getAccessToken());
+      });
+
+      // Check if user is already signed in on page load
+      setIsSignedIn(auth.isSignedIn());
+      setAccessToken(auth.getAccessToken());
+    });
   }, []);
 
   const signIn = () => {
-    auth.signInToGoogle();
+    auth.signIn();
   };
 
   const signOut = () => {
     auth.signOut();
-    setAccessToken(auth.getAccessToken());
   };
 
   const makeAuthenticatedFetch = async () => {
@@ -43,11 +58,11 @@ export default function App() {
   };
 
   return (
-    <div style={{padding: 20}}>
+    <div style={{padding: 20, display: isAuthInitialized ? 'block' : 'none'}}>
       <Typography variant="h4">
         Performant DICOM Viewer
       </Typography>
-      {!accessToken ?
+      {!isSignedIn ?
         <Button
           variant="contained"
           color="primary"
