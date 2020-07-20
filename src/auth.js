@@ -67,7 +67,7 @@ const onSignedInChanged = (callback) => {
  * @return {string} Access token (or null if none present)
  */
 const getAccessToken = () => {
-  if (isSignedIn) {
+  if (isSignedIn()) {
     return gapi.auth2.getAuthInstance().currentUser.get()
         .getAuthResponse().access_token;
   }
