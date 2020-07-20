@@ -15,14 +15,8 @@ const CLOUD_RESOURCE_MANAGER_API_BASE = 'https://cloudresourcemanager.googleapis
  * @default */
 const HEALTHCARE_API_BASE = 'https://healthcare.googleapis.com';
 
-/** Base url for the /v1beta1/ healthcare api endpoints
- * @constant {string}
- * @default */
-const HEALTHCARE_BETA_API_BASE = 'https://content-healthcare.googleapis.com';
-
 export {
   CLIENT_ID,
   CLOUD_RESOURCE_MANAGER_API_BASE,
   HEALTHCARE_API_BASE,
-  HEALTHCARE_BETA_API_BASE,
 };

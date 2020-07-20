@@ -3,7 +3,6 @@ import * as auth from './auth.js';
 import {
   CLOUD_RESOURCE_MANAGER_API_BASE,
   HEALTHCARE_API_BASE,
-  HEALTHCARE_BETA_API_BASE,
 } from './config.js';
 
 /**
@@ -73,7 +72,7 @@ const fetchProjects = async (pageToken, projects) => {
 const fetchLocations = async (projectId) => {
   const endpoint = `/v1beta1/projects/${projectId}/locations`;
   const response =
-    await authenticatedFetch(HEALTHCARE_BETA_API_BASE + endpoint);
+    await authenticatedFetch(HEALTHCARE_API_BASE + endpoint);
   const data = await response.json();
 
   // Return a list of location Id's
