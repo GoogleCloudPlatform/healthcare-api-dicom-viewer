@@ -1,90 +1,78 @@
 /** @module auth */
 import {CLIENT_ID} from './config.js';
 
-const REDIRECT_URI = window.location.href;
+// eslint-disable-next-line no-var
+let GoogleAuth;
+const SCOPE = 'https://www.googleapis.com/auth/cloud-healthcare https://www.googleapis.com/auth/cloud-platform';
+
+let onInitializedCallback = () => {};
 
 /**
- * Redirect to Google OAuth2 sign-in page
+ * Initialize the gapi.client object
  */
-const signInToGoogle = () => {
-  // Google's OAuth 2.0 endpoint for requesting an access token
-  const oauth2Endpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
+const initClient = () => {
+  const redirectUri = window.location.origin;
 
-  // Create element to open OAuth 2.0 endpoint in new window.
-  const form = document.createElement('form');
-  form.setAttribute('method', 'GET'); // Send as a GET request.
-  form.setAttribute('action', oauth2Endpoint);
+  gapi.client.init({
+    'clientId': CLIENT_ID,
+    'scope': SCOPE,
+    'ux_mode': 'redirect',
+    'redirect_uri': redirectUri,
+  }).then(function() {
+    GoogleAuth = gapi.auth2.getAuthInstance();
 
-  // Parameters to pass to OAuth 2.0 endpoint.
-  const params = {
-    'client_id': CLIENT_ID,
-    'redirect_uri': REDIRECT_URI,
-    'scope': 'https://www.googleapis.com/auth/cloud-healthcare https://www.googleapis.com/auth/cloud-platform',
-    'include_granted_scopes': 'true',
-    'response_type': 'token',
-  };
-
-  // Add form parameters as hidden input values.
-  for (const p in params) {
-    if ({}.hasOwnProperty.call(params, p)) {
-      const input = document.createElement('input');
-      input.setAttribute('type', 'hidden');
-      input.setAttribute('name', p);
-      input.setAttribute('value', params[p]);
-      form.appendChild(input);
-    }
-  }
-
-  // Add form to page and submit it to open the OAuth 2.0 endpoint.
-  document.body.appendChild(form);
-  form.submit();
+    onInitializedCallback();
+  });
 };
 
 /**
- * Removes access token from local storage
+ * Sets the function to run when initClient finishes
+ * @param {function(): any} callback Called after client initializes
  */
-const signOut = () => {
-  localStorage.removeItem('oauth2-params');
+const onInitialized = (callback) => {
+  onInitializedCallback = callback;
 };
 
 /**
- * Checks if the current url was redirected from Google Authentication
- * and stores the access token if so
+ * Signs user in with GoogleAuth
+ * @return {Promise<GoogleUser>} Promise that resolves with
+ *    the Google User that was signed in
+*/
+const signIn = () => GoogleAuth.signIn();
+
+/**
+ * Signs user in with GoogleAuth
+ * @return {Promise} Promise that resolves when user is
+ *    signed out
  */
-const storeOAuthUrlParams = () => {
-  // Parse query string to see if page request is coming from OAuth 2.0 server.
-  const fragmentString = location.hash.substring(1);
-  const params = {};
-  const regex = /([^&=]+)=([^&]*)/g; let m;
-  while (m = regex.exec(fragmentString)) {
-    params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
-  }
-  if (Object.keys(params).length > 0) {
-    localStorage.setItem('oauth2-params', JSON.stringify(params));
+const signOut = () => GoogleAuth.signOut();
 
-    // If access was denied, request login again
-    if (params.error) {
-      signInToGoogle();
-    }
-  }
+/**
+ * Checks if user is signed in or not
+ * @return {boolean} User signed in status
+ */
+const isSignedIn = () => GoogleAuth.isSignedIn.get();
 
-  // Clear parameters from url bar once stored
-  window.history.replaceState({}, document.title, '/');
+/**
+ * Sets the function to run when user's signed in state changes
+ * @param {function(boolean): any} callback Called when
+ *    signed in state changes
+ */
+const onSignedInChanged = (callback) => {
+  GoogleAuth.isSignedIn.listen(callback);
 };
 
 /**
- * Retrives the access token from local storage
+ * Retrives the access token from the GoogleAuth client
  * @return {string} Access token (or null if none present)
  */
 const getAccessToken = () => {
-  const params = JSON.parse(localStorage.getItem('oauth2-params'));
-  if (params && params['access_token']) {
-    return params['access_token'];
+  if (isSignedIn()) {
+    return gapi.auth2.getAuthInstance().currentUser.get()
+        .getAuthResponse().access_token;
   }
   return null;
 };
 
-export {signInToGoogle, signOut, storeOAuthUrlParams, getAccessToken};
-
-// Run on every page load
-storeOAuthUrlParams();
+export {initClient, onInitialized, signIn, signOut,
+  isSignedIn, onSignedInChanged, getAccessToken};

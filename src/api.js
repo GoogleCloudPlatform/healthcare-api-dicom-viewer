@@ -3,11 +3,10 @@ import * as auth from './auth.js';
 import {
   CLOUD_RESOURCE_MANAGER_API_BASE,
   HEALTHCARE_API_BASE,
-  HEALTHCARE_BETA_API_BASE,
 } from './config.js';
 
 /**
- * Fetches a url using an access token, signing the user in
+ * Fetches a url using a stored access token, signing the user in
  * if no access token exists
  * @param {RequestInfo} input The request info to fetch
  * @param {RequestInit=} init The request init object
@@ -38,23 +37,25 @@ const authenticatedFetch = async (input, init) => {
 
     if (!response.ok) {
       if (response.status == 401) {
-        auth.signInToGoogle();
+        auth.signIn();
       } else {
-        throw new Error(response.json());
+        throw new Error(await response.text());
       }
     }
 
     return response;
   } else {
-    auth.signInToGoogle();
+    auth.signIn();
   }
 };
 
+// TODO: Add ability to filter by search query, to
+//       later implement with navigation views
 /**
- * Fetches a list of the users google cloud projects recursively
+ * Fetches a list of the user's google cloud projects recursively
  * @param {string=} pageToken Page token to use for the request
  * @param {Array=} projects Projects fetched from a previous iteration
- * @return {Promise<Object[]>} List of projects available to the user
+ * @return {Promise<Array<string>>} List of projects available to the user
  */
 const fetchProjects = async (pageToken, projects) => {
   const endpoint = '/v1/projects' +
@@ -63,8 +64,8 @@ const fetchProjects = async (pageToken, projects) => {
     await authenticatedFetch(CLOUD_RESOURCE_MANAGER_API_BASE + endpoint);
   const data = await response.json();
 
-  // If next page token is present in the response, fetch again with
-  // current project list
+  // If next page token is present in the response, fetch again and
+  // pass along the current project list
   if (data.nextPageToken) {
     if (projects) {
       return fetchProjects(data.nextPageToken,
@@ -83,12 +84,12 @@ const fetchProjects = async (pageToken, projects) => {
 /**
  * Fetches a list of the possible locations for a given project
  * @param {string} projectId Project id to search locations for
- * @return {Promise<Object[]>} List of locations available for project
+ * @return {Promise<Array<string>>} List of locations available for project
  */
 const fetchLocations = async (projectId) => {
   const endpoint = `/v1beta1/projects/${projectId}/locations`;
   const response =
-    await authenticatedFetch(HEALTHCARE_BETA_API_BASE + endpoint);
+    await authenticatedFetch(HEALTHCARE_API_BASE + endpoint);
   const data = await response.json();
 
   // Return a list of location Id's
@@ -96,10 +97,10 @@ const fetchLocations = async (projectId) => {
 };
 
 /**
- * Fetches a list of the datasets in a given project/location
+ * Fetches a list of the datasets in a project location
  * @param {string} projectId Project id
  * @param {string} location Location
- * @return {Promise<Object[]>} List of datasets available
+ * @return {Promise<Array<string>>} List of datasets available
  */
 const fetchDatasets = async (projectId, location) => {
   // TODO: Handle page tokens
@@ -113,11 +114,11 @@ const fetchDatasets = async (projectId, location) => {
 };
 
 /**
- * Fetches a list of the dicomStores in a given project/location/dataset
+ * Fetches a list of the dicomStores in a dataset
  * @param {string} projectId Project ID
  * @param {string} location Location
  * @param {string} dataset Dataset
- * @return {Promise<Object[]>} List of dicomStores available
+ * @return {Promise<Array<string>>} List of dicomStores available
  */
 const fetchDicomStores = async (projectId, location, dataset) => {
   // TODO: Handle page tokens
@@ -134,15 +135,15 @@ const fetchDicomStores = async (projectId, location, dataset) => {
 };
 
 /**
- * Fetches a list of studies in a given project/location/dataset/dicomStore
+ * Fetches a list of studies in a dicom store
  * @param {string} projectId Project ID
  * @param {string} location Location
  * @param {string} dataset Dataset
  * @param {string} dicomStore Dicom Store
- * @return {Promise<Object[]>} List of studies in the dicom store
+ * @return {Promise<Array<Object>>} List of studies in the dicom store
  */
 const fetchStudies =
-async (projectId, location, dataset, dicomStore) => {
+    async (projectId, location, dataset, dicomStore) => {
   const endpoint =
     `/v1/projects/${projectId}/locations/${location}/datasets/${dataset}` +
     `/dicomStores/${dicomStore}/dicomWeb/studies`;
@@ -154,16 +155,16 @@ async (projectId, location, dataset, dicomStore) => {
 };
 
 /**
- * Fetches a list of series in a given project/location/dataset/dicomStore/study
+ * Fetches a list of series in a study
  * @param {string} projectId Project ID
  * @param {string} location Location
  * @param {string} dataset Dataset
  * @param {string} dicomStore Dicom Store
  * @param {string} studyId Study UID
- * @return {Promise<Object[]>} List of series in the study
+ * @return {Promise<Array<Object>>} List of series in the study
  */
 const fetchSeries =
-async (projectId, location, dataset, dicomStore, studyId) => {
+    async (projectId, location, dataset, dicomStore, studyId) => {
   const endpoint =
     `/v1/projects/${projectId}/locations/${location}/datasets/${dataset}` +
     `/dicomStores/${dicomStore}/dicomWeb/studies/${studyId}/series`;
