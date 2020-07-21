@@ -1,9 +1,11 @@
 /** @module auth */
 import {CLIENT_ID} from './config.js';
 
-// eslint-disable-next-line no-var
 let GoogleAuth;
-const SCOPE = 'https://www.googleapis.com/auth/cloud-healthcare https://www.googleapis.com/auth/cloud-platform';
+const SCOPE = [
+  'https://www.googleapis.com/auth/cloud-healthcare',
+  'https://www.googleapis.com/auth/cloudplatformprojects.readonly',
+].join(' ');
 const DISCOVERY_DOCS = [
   'https://cloudresourcemanager.googleapis.com/$discovery/rest?version=v1',
   'https://healthcare.googleapis.com/$discovery/rest?version=v1beta1',
