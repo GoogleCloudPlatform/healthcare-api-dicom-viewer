@@ -10,10 +10,15 @@ import * as api from './api.js';
 export default function App() {
   const [isAuthInitialized, setIsAuthInitialized] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
-  const [accessToken, setAccessToken] = useState(null);
   const [url, setUrl] = useState('');
   const [fetchResult, setFetchResult] = useState('');
   const [isError, setIsError] = useState(false);
+
+  const [project, setProject] = useState('');
+  const [location, setLocation] = useState('');
+  const [dataset, setDataset] = useState('');
+  const [dicomStore, setDicomStore] = useState('');
+  const [studyId, setStudyId] = useState('');
 
   // When this react component is mounted, load GoogleAuth
   // library and initialize listeners
@@ -26,12 +31,10 @@ export default function App() {
       // Set up listener to listen to signed in state changes
       auth.onSignedInChanged((isSignedIn) => {
         setIsSignedIn(isSignedIn);
-        setAccessToken(auth.getAccessToken());
       });
 
       // Check if user is already signed in on page load
       setIsSignedIn(auth.isSignedIn());
-      setAccessToken(auth.getAccessToken());
     });
   }, []);
 
@@ -50,10 +53,20 @@ export default function App() {
         setFetchResult(await result.text());
         setIsError(false);
       } catch (error) {
-        console.log(error);
         setFetchResult(error.message);
         setIsError(true);
       }
+    }
+  };
+
+  const makeApiCall = async (apiCall) => {
+    try {
+      const result = await apiCall();
+      setFetchResult(JSON.stringify(result));
+      setIsError(false);
+    } catch (error) {
+      setFetchResult(JSON.stringify(error.result));
+      setIsError(true);
     }
   };
 
@@ -71,9 +84,6 @@ export default function App() {
           variant="contained"
           color="primary"
           onClick={signOut}>Sign out</Button>}
-      <Typography variant="body1">
-        Access Token: {accessToken}
-      </Typography>
       <TextField
         label="URL"
         onChange={(e) => setUrl(e.target.value)}
@@ -81,8 +91,60 @@ export default function App() {
       <Button
         variant="contained"
         color="primary"
-        onClick={makeAuthenticatedFetch}
-        disabled={!url}>Make Authenticated Request</Button>
+        onClick={() => makeAuthenticatedFetch()}
+        disabled={!url}>Make Authenticated Request</Button><br/><br/>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => makeApiCall(api.fetchProjects)}>
+          fetch Projects
+      </Button><br/>
+      <TextField
+        label="Project"
+        onChange={(e) => setProject(e.target.value)}/><br/><br/>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => makeApiCall(() => api.fetchLocations(project))}>
+          fetch Locations
+      </Button><br/>
+      <TextField
+        label="Location"
+        onChange={(e) => setLocation(e.target.value)}/><br/><br/>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => makeApiCall(() => api.fetchDatasets(project, location))}>
+          fetch Datasets
+      </Button><br/>
+      <TextField
+        label="Dataset"
+        onChange={(e) => setDataset(e.target.value)}/><br/><br/>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => makeApiCall(() => api.fetchDicomStores(project, location, dataset))}>
+          fetch DicomStores
+      </Button><br/>
+      <TextField
+        label="Dicom Store"
+        onChange={(e) => setDicomStore(e.target.value)}/><br/><br/>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => makeApiCall(() => api.fetchStudies(project, location, dataset, dicomStore))}>
+          fetch Studies
+      </Button><br/>
+      <TextField
+        label="StudyUID"
+        onChange={(e) => setStudyId(e.target.value)}/><br/><br/>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => makeApiCall(() => api.fetchSeries(project, location, dataset, dicomStore, studyId))}>
+          fetch Series
+      </Button><br/>
+      <Typography variant="h4">Result</Typography>
       <Typography color={isError ? 'error' : 'initial'}>
         {fetchResult}
       </Typography>
