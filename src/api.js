@@ -32,6 +32,7 @@ const authenticatedFetch = async (url) => {
 
 // TODO: Add ability to filter by search query, to
 //       later implement with navigation views
+// https://github.com/GoogleCloudPlatform/healthcare-api-dicom-viewer/issues/6
 /**
  * Fetches a list of the user's google cloud projects recursively
  * @param {string=} pageToken Page token to use for the request
