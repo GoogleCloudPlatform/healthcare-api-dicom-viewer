@@ -123,8 +123,9 @@ export default function App() {
       <Button
         variant="contained"
         color="primary"
-        onClick={() => makeApiCall(() => api.fetchDicomStores(project, location, dataset))}>
-          fetch DicomStores
+        onClick={() => makeApiCall(() =>
+          api.fetchDicomStores(project, location, dataset))}>
+            fetch DicomStores
       </Button><br/>
       <TextField
         label="Dicom Store"
@@ -132,8 +133,9 @@ export default function App() {
       <Button
         variant="contained"
         color="primary"
-        onClick={() => makeApiCall(() => api.fetchStudies(project, location, dataset, dicomStore))}>
-          fetch Studies
+        onClick={() => makeApiCall(() =>
+          api.fetchStudies(project, location, dataset, dicomStore))}>
+            fetch Studies
       </Button><br/>
       <TextField
         label="StudyUID"
@@ -141,8 +143,9 @@ export default function App() {
       <Button
         variant="contained"
         color="primary"
-        onClick={() => makeApiCall(() => api.fetchSeries(project, location, dataset, dicomStore, studyId))}>
-          fetch Series
+        onClick={() => makeApiCall(() =>
+          api.fetchSeries(project, location, dataset, dicomStore, studyId))}>
+            fetch Series
       </Button><br/>
       <Typography variant="h4">Result</Typography>
       <Typography color={isError ? 'error' : 'initial'}>
