@@ -1,9 +1,5 @@
 /** @module api */
 import * as auth from './auth.js';
-import {
-  CLOUD_RESOURCE_MANAGER_API_BASE,
-  HEALTHCARE_API_BASE,
-} from './config.js';
 
 /**
  * Fetches a url using a stored access token, signing the user in
@@ -43,20 +39,19 @@ const authenticatedFetch = async (url) => {
  * @return {Promise<Array<string>>} List of projects available to the user
  */
 const fetchProjects = async (pageToken, projects) => {
-  const endpoint = '/v1/projects' +
-      (pageToken ? `?pageToken=${pageToken}` : '');
-  const response =
-    await authenticatedFetch(CLOUD_RESOURCE_MANAGER_API_BASE + endpoint);
-  const data = await response.json();
+  const response = await gapi.client.cloudresourcemanager.projects.list({
+    pageToken,
+  });
+  const data = response.result;
 
   // If next page token is present in the response, fetch again and
   // pass along the current project list
   if (data.nextPageToken) {
     if (projects) {
-      return fetchProjects(data.nextPageToken,
+      return await fetchProjects(data.nextPageToken,
           [...projects, ...data.projects]);
     }
-    return fetchProjects(data.nextPageToken, data.projects);
+    return await fetchProjects(data.nextPageToken, data.projects);
   }
 
   // Return a list of project Id's
@@ -126,15 +121,15 @@ const fetchDicomStores = async (projectId, location, dataset) => {
  */
 const fetchStudies =
     async (projectId, location, dataset, dicomStore) => {
-  const data = await gapi.client.healthcare.projects.locations.datasets
-      .dicomStores.searchForStudies({
-        parent: `projects/${projectId}/locations/${location}/` +
+      const data = await gapi.client.healthcare.projects.locations.datasets
+          .dicomStores.searchForStudies({
+            parent: `projects/${projectId}/locations/${location}/` +
             `datasets/${dataset}/dicomStores/${dicomStore}`,
-        dicomWebPath: 'studies',
-      });
+            dicomWebPath: 'studies',
+          });
 
-  return data.result;
-};
+      return data.result;
+    };
 
 /**
  * Fetches a list of series in a study
@@ -147,15 +142,15 @@ const fetchStudies =
  */
 const fetchSeries =
     async (projectId, location, dataset, dicomStore, studyId) => {
-  const data = await gapi.client.healthcare.projects.locations.datasets
-      .dicomStores.studies.searchForSeries({
-        parent: `projects/${projectId}/locations/${location}/` +
+      const data = await gapi.client.healthcare.projects.locations.datasets
+          .dicomStores.studies.searchForSeries({
+            parent: `projects/${projectId}/locations/${location}/` +
             `datasets/${dataset}/dicomStores/${dicomStore}`,
-        dicomWebPath: `studies/${studyId}/series`,
-      });
+            dicomWebPath: `studies/${studyId}/series`,
+          });
 
-  return data.result;
-};
+      return data.result;
+    };
 
 export {authenticatedFetch, fetchProjects, fetchLocations, fetchDatasets,
   fetchDicomStores, fetchStudies, fetchSeries};
