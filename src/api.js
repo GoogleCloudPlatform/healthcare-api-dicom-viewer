@@ -38,25 +38,24 @@ const authenticatedFetch = async (url) => {
  * @param {Array=} projects Projects fetched from a previous iteration
  * @return {Promise<Array<string>>} List of projects available to the user
  */
-const fetchProjects = async (pageToken, projects) => {
+const fetchProjects = async (pageToken) => {
   const response = await gapi.client.cloudresourcemanager.projects.list({
     pageToken,
   });
   const data = response.result;
 
   // If next page token is present in the response, fetch again and
-  // pass along the current project list
+  // concat result to the current project list
   if (data.nextPageToken) {
-    if (projects) {
-      return await fetchProjects(data.nextPageToken,
-          [...projects, ...data.projects]);
+    if (pageToken) {
+      return data.projects.concat(await fetchProjects(data.nextPageToken));
     }
-    return await fetchProjects(data.nextPageToken, data.projects);
+    return data.projects.concat(await fetchProjects(data.nextPageToken))
+        .map((project) => project.projectId);
   }
 
-  // Return a list of project Id's
-  if (projects) {
-    return [...projects, ...data.projects].map((project) => project.projectId);
+  if (pageToken) {
+    return data.projects;
   }
   return data.projects.map((project) => project.projectId);
 };
@@ -122,15 +121,15 @@ const fetchDicomStores = async (projectId, location, dataset) => {
  */
 const fetchStudies =
     async (projectId, location, dataset, dicomStore) => {
-  const data = await gapi.client.healthcare.projects.locations.datasets
-      .dicomStores.searchForStudies({
-        parent: `projects/${projectId}/locations/${location}/` +
+      const data = await gapi.client.healthcare.projects.locations.datasets
+          .dicomStores.searchForStudies({
+            parent: `projects/${projectId}/locations/${location}/` +
         `datasets/${dataset}/dicomStores/${dicomStore}`,
-        dicomWebPath: 'studies',
-      });
+            dicomWebPath: 'studies',
+          });
 
-  return data.result;
-};
+      return data.result;
+    };
 
 /**
  * Fetches a list of series in a study
@@ -143,15 +142,15 @@ const fetchStudies =
  */
 const fetchSeries =
     async (projectId, location, dataset, dicomStore, studyId) => {
-  const data = await gapi.client.healthcare.projects.locations.datasets
-      .dicomStores.studies.searchForSeries({
-        parent: `projects/${projectId}/locations/${location}/` +
+      const data = await gapi.client.healthcare.projects.locations.datasets
+          .dicomStores.studies.searchForSeries({
+            parent: `projects/${projectId}/locations/${location}/` +
         `datasets/${dataset}/dicomStores/${dicomStore}`,
-        dicomWebPath: `studies/${studyId}/series`,
-      });
+            dicomWebPath: `studies/${studyId}/series`,
+          });
 
-  return data.result;
-};
+      return data.result;
+    };
 
 export {authenticatedFetch, fetchProjects, fetchLocations, fetchDatasets,
   fetchDicomStores, fetchStudies, fetchSeries};
