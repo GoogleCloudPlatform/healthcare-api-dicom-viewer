@@ -34,7 +34,7 @@ const authenticatedFetch = async (url) => {
 //       later implement with navigation views
 // https://github.com/GoogleCloudPlatform/healthcare-api-dicom-viewer/issues/6
 /**
- * Fetches a list of the user's google cloud projects recursively
+ * Fetches a list of the user's google cloud project ids recursively
  * @param {string=} pageToken Page token to use for the request
  * @param {Array=} projects Projects fetched from a previous iteration
  * @return {Promise<Array<string>>} List of projects available to the user
@@ -62,7 +62,7 @@ const fetchProjects = async (pageToken) => {
 };
 
 /**
- * Fetches a list of the possible locations for a given project
+ * Fetches a list of the possible location ids for a given project
  * @param {string} projectId Project id to search locations for
  * @return {Promise<Array<string>>} List of locations available for project
  */
