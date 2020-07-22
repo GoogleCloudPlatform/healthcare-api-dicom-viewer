@@ -50,15 +50,10 @@ const fetchProjects = async (pageToken) => {
   // push result to the current project list
   if (data.nextPageToken) {
     projects.push(...await fetchProjects(data.nextPageToken));
-
-    // Ensure only the first iteration calls .map
-    // by checking if pageToken was passed
-    if (pageToken) {
-      return projects;
-    }
-    return projects.map((project) => project.projectId);
   }
 
+  // Ensure only the first iteration calls .map
+  // by checking if pageToken was passed
   if (pageToken) {
     return projects;
   }
