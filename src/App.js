@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import {Typography, Button, TextField} from '@material-ui/core';
-import * as auth from './auth.js';
+import Auth from './auth.js';
 import * as api from './api.js';
 
 /**
@@ -23,27 +23,26 @@ export default function App() {
   // When this react component is mounted, load GoogleAuth
   // library and initialize listeners
   useEffect(() => {
-    // Load GooglAuth library on mount
-    gapi.load('client:auth2', auth.initClient);
-    auth.onInitialized(() => {
+    // Load Auth library on mount
+    Auth.initClient().then(() => {
       setIsAuthInitialized(true);
 
       // Set up listener to listen to signed in state changes
-      auth.onSignedInChanged((isSignedIn) => {
+      Auth.onSignedInChanged((isSignedIn) => {
         setIsSignedIn(isSignedIn);
       });
 
       // Check if user is already signed in on page load
-      setIsSignedIn(auth.isSignedIn());
+      setIsSignedIn(Auth.isSignedIn());
     });
   }, []);
 
   const signIn = () => {
-    auth.signIn();
+    Auth.signIn();
   };
 
   const signOut = () => {
-    auth.signOut();
+    Auth.signOut();
   };
 
   const makeAuthenticatedFetch = async () => {

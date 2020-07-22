@@ -1,5 +1,5 @@
 /** @module api */
-import * as auth from './auth.js';
+import Auth from './auth.js';
 
 /**
  * Fetches a url using a stored access token, signing the user in
@@ -8,7 +8,7 @@ import * as auth from './auth.js';
  * @return {Promise<Response>} Fetch response object
  */
 const authenticatedFetch = async (url) => {
-  const accessToken = auth.getAccessToken();
+  const accessToken = Auth.getAccessToken();
   if (accessToken) {
     const response = await fetch(url, {
       headers: {
@@ -18,7 +18,7 @@ const authenticatedFetch = async (url) => {
 
     if (!response.ok) {
       if (response.status == 401) {
-        auth.signIn();
+        Auth.signIn();
       } else {
         throw new Error(await response.text());
       }
@@ -26,7 +26,7 @@ const authenticatedFetch = async (url) => {
 
     return response;
   } else {
-    auth.signIn();
+    Auth.signIn();
   }
 };
 
