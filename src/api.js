@@ -1,5 +1,5 @@
 /** @module api */
-import * as auth from './auth.js';
+import Auth from './auth.js';
 
 /**
  * Fetches a url using a stored access token, signing the user in
@@ -8,7 +8,7 @@ import * as auth from './auth.js';
  * @return {Promise<Response>} Fetch response object
  */
 const authenticatedFetch = async (url) => {
-  const accessToken = auth.getAccessToken();
+  const accessToken = Auth.getAccessToken();
   if (accessToken) {
     const response = await fetch(url, {
       headers: {
@@ -18,7 +18,7 @@ const authenticatedFetch = async (url) => {
 
     if (!response.ok) {
       if (response.status == 401) {
-        auth.signIn();
+        Auth.signIn();
       } else {
         throw new Error(await response.text());
       }
@@ -26,14 +26,15 @@ const authenticatedFetch = async (url) => {
 
     return response;
   } else {
-    auth.signIn();
+    Auth.signIn();
   }
 };
 
 // TODO: Add ability to filter by search query, to
 //       later implement with navigation views
+// https://github.com/GoogleCloudPlatform/healthcare-api-dicom-viewer/issues/6
 /**
- * Fetches a list of the user's google cloud projects recursively
+ * Fetches a list of the user's google cloud project ids recursively
  * @param {string=} pageToken Page token to use for the request
  * @param {Array=} projects Projects fetched from a previous iteration
  * @return {Promise<Array<string>>} List of projects available to the user
@@ -43,25 +44,24 @@ const fetchProjects = async (pageToken) => {
     pageToken,
   });
   const data = response.result;
+  const projects = data.projects;
 
   // If next page token is present in the response, fetch again and
-  // concat result to the current project list
+  // push result to the current project list
   if (data.nextPageToken) {
-    if (pageToken) {
-      return data.projects.concat(await fetchProjects(data.nextPageToken));
-    }
-    return data.projects.concat(await fetchProjects(data.nextPageToken))
-        .map((project) => project.projectId);
+    projects.push(...await fetchProjects(data.nextPageToken));
   }
 
+  // Ensure only the first iteration calls .map
+  // by checking if pageToken was passed
   if (pageToken) {
-    return data.projects;
+    return projects;
   }
-  return data.projects.map((project) => project.projectId);
+  return projects.map((project) => project.projectId);
 };
 
 /**
- * Fetches a list of the possible locations for a given project
+ * Fetches a list of the possible location ids for a given project
  * @param {string} projectId Project id to search locations for
  * @return {Promise<Array<string>>} List of locations available for project
  */

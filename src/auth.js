@@ -11,32 +11,28 @@ const DISCOVERY_DOCS = [
   'https://healthcare.googleapis.com/$discovery/rest?version=v1beta1',
 ];
 
-let onInitializedCallback = () => {};
-
 /**
  * Initialize the gapi.client object
  */
-const initClient = () => {
-  const redirectUri = window.location.origin;
+const initClient = async () => {
+  return new Promise((resolve, reject) => {
+    gapi.load('client:auth2', () => {
+      const redirectUri = window.location.origin;
 
-  gapi.client.init({
-    'clientId': CLIENT_ID,
-    'scope': SCOPE,
-    'discoveryDocs': DISCOVERY_DOCS,
-    'ux_mode': 'redirect',
-    'redirect_uri': redirectUri,
-  }).then(function() {
-    GoogleAuth = gapi.auth2.getAuthInstance();
-    onInitializedCallback();
+      gapi.client.init({
+        'clientId': CLIENT_ID,
+        'scope': SCOPE,
+        'discoveryDocs': DISCOVERY_DOCS,
+        'ux_mode': 'redirect',
+        'redirect_uri': redirectUri,
+      }).then(() => {
+        GoogleAuth = gapi.auth2.getAuthInstance();
+        resolve();
+      }).catch((error) => {
+        reject(error);
+      });
+    });
   });
-};
-
-/**
- * Sets the function to run when initClient finishes
- * @param {function(): any} callback Called after client initializes
- */
-const onInitialized = (callback) => {
-  onInitializedCallback = callback;
 };
 
 /**
@@ -74,11 +70,19 @@ const onSignedInChanged = (callback) => {
  */
 const getAccessToken = () => {
   if (isSignedIn()) {
-    return gapi.auth2.getAuthInstance().currentUser.get()
+    return GoogleAuth.currentUser.get()
         .getAuthResponse().access_token;
   }
   return null;
 };
 
-export {initClient, onInitialized, signIn, signOut,
-  isSignedIn, onSignedInChanged, getAccessToken};
+const Auth = {
+  initClient,
+  signIn,
+  signOut,
+  isSignedIn,
+  onSignedInChanged,
+  getAccessToken,
+};
+
+export default Auth;
