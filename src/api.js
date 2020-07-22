@@ -44,21 +44,25 @@ const fetchProjects = async (pageToken) => {
     pageToken,
   });
   const data = response.result;
+  const projects = data.projects;
 
   // If next page token is present in the response, fetch again and
-  // concat result to the current project list
+  // push result to the current project list
   if (data.nextPageToken) {
+    projects.push(...await fetchProjects(data.nextPageToken));
+
+    // Ensure only the first iteration calls .map
+    // by checking if pageToken was passed
     if (pageToken) {
-      return data.projects.concat(await fetchProjects(data.nextPageToken));
+      return projects;
     }
-    return data.projects.concat(await fetchProjects(data.nextPageToken))
-        .map((project) => project.projectId);
+    return projects.map((project) => project.projectId);
   }
 
   if (pageToken) {
-    return data.projects;
+    return projects;
   }
-  return data.projects.map((project) => project.projectId);
+  return projects.map((project) => project.projectId);
 };
 
 /**
