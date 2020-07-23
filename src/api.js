@@ -59,6 +59,9 @@ const fetchProjects = async () => {
     return projects;
   };
 
+  // Fetch a list of projects recursively, then map them to only return
+  // a list of projectIds. (We use this internal function to avoid having to
+  // call .map(...) multiple times. This way lets us call it once at the end)
   const projects = await fetchProjectsInternal();
   return projects.map((project) => project.projectId);
 };
