@@ -34,29 +34,32 @@ const authenticatedFetch = async (url) => {
 //       later implement with navigation views
 // https://github.com/GoogleCloudPlatform/healthcare-api-dicom-viewer/issues/6
 /**
- * Fetches a list of the user's google cloud project ids recursively
- * @param {string=} pageToken Page token to use for the request
- * @param {Array=} projects Projects fetched from a previous iteration
- * @return {Promise<Array<string>>} List of projects available to the user
+ * Fetches a list of the user's google cloud project ids
+ * @return {Promise<Array<string>>} List of project ids available to the user
  */
-const fetchProjects = async (pageToken) => {
-  const response = await gapi.client.cloudresourcemanager.projects.list({
-    pageToken,
-  });
-  const data = response.result;
-  const projects = data.projects;
+const fetchProjects = async () => {
+  /**
+   * Fetches a list of the user's google cloud project recursively
+   * @param {string=} pageToken Page token to use for the request
+   * @return {Promise<Array<Object>>} List of projects available to the user
+   */
+  const fetchProjectsInternal = async (pageToken) => {
+    const response = await gapi.client.cloudresourcemanager.projects.list({
+      pageToken,
+    });
+    const data = response.result;
+    const projects = data.projects;
 
-  // If next page token is present in the response, fetch again and
-  // push result to the current project list
-  if (data.nextPageToken) {
-    projects.push(...await fetchProjects(data.nextPageToken));
-  }
+    // If next page token is present in the response, fetch again and
+    // push result to the current project list
+    if (data.nextPageToken) {
+      projects.push(...await fetchProjectsInternal(data.nextPageToken));
+    }
 
-  // Ensure only the first iteration calls .map
-  // by checking if pageToken was passed
-  if (pageToken) {
     return projects;
-  }
+  };
+
+  const projects = await fetchProjectsInternal();
   return projects.map((project) => project.projectId);
 };
 
