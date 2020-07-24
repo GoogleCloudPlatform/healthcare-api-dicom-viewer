@@ -34,36 +34,18 @@ const authenticatedFetch = async (url) => {
 //       later implement with navigation views
 // https://github.com/GoogleCloudPlatform/healthcare-api-dicom-viewer/issues/6
 /**
- * Fetches a list of the user's google cloud project ids
+ * Fetches one page of user's google cloud project ids
+ * @param {string=} searchQuery Optional search query to filter project ids
  * @return {Promise<Array<string>>} List of project ids available to the user
  */
-const fetchProjects = async () => {
-  /**
-   * Fetches a list of the user's google cloud projects recursively
-   * @param {string=} pageToken Page token to use for the request
-   * @return {Promise<Array<Object>>} List of projects available to the user
-   */
-  const fetchProjectsInternal = async (pageToken) => {
-    const response = await gapi.client.cloudresourcemanager.projects.list({
-      pageToken,
-    });
-    const data = response.result;
-    const projects = data.projects;
+const fetchProjects = async (searchQuery) => {
+  const request = {};
+  if (searchQuery) {
+    request.filter = `id:${searchQuery}*`;
+  }
+  const data = await gapi.client.cloudresourcemanager.projects.list(request);
 
-    // If next page token is present in the response, fetch again and
-    // push result to the current project list
-    if (data.nextPageToken) {
-      projects.push(...await fetchProjectsInternal(data.nextPageToken));
-    }
-
-    return projects;
-  };
-
-  // Fetch a list of projects recursively, then map them to only return
-  // a list of projectIds. (We use this internal function to avoid having to
-  // call .map(...) multiple times. This way lets us call it once at the end)
-  const projects = await fetchProjectsInternal();
-  return projects.map((project) => project.projectId);
+  return data.result.projects.map((project) => project.projectId);
 };
 
 /**

@@ -95,6 +95,9 @@ export default function Main() {
   const loadProjects = async () =>
     loadData(api.fetchProjects, setProjectsLoading, setProjects);
 
+  const loadFilteredProjects = async (searchQuery) =>
+    loadData(() => api.fetchProjects(searchQuery), setProjectsLoading, setProjects);
+
   const loadLocations = async (projectId) =>
     loadData(() => api.fetchLocations(projectId),
         setLocationsLoading, setLocations);
@@ -244,6 +247,10 @@ export default function Main() {
         selectedStudy['0020000D'].Value[0]);
   };
 
+  const handleProjectSearch = (searchQuery) => {
+    loadFilteredProjects(searchQuery);
+  };
+
   return (
     <div className={classes.root}>
       <Box m={2} display="flex" flexDirection="row">
@@ -304,7 +311,9 @@ export default function Main() {
         <SearchList
           items={projects}
           onClickItem={selectProject}
-          isLoading={projectsLoading} /> : null}
+          isLoading={projectsLoading}
+          onSearch={handleProjectSearch}
+          searchDelay={200} /> : null}
       {(selectedProject && !selectedLocation) ?
         <SearchList
           items={locations}

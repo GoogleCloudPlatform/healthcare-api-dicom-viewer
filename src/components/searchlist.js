@@ -46,9 +46,19 @@ function FilterItems({items, searchQuery, onClickItem, maxDisplayAmount}) {
  * @param {function(string): *} props.onClickItem Function to run when
  *   user clicks an item
  * @param {boolean} props.isLoading Whether or not data is still loading
+ * @param {(function(string): *)=} props.onSearch Function to override search
+ *    filtering with a separate api call for example
+ * @param {number=} props.searchDelay Optional override of the delay after
+ *    user stops typing in search bar to execute the search
  * @return {ReactElement} <SearchList />
  */
-export default function SearchList({items, onClickItem, isLoading}) {
+export default function SearchList({
+  items,
+  onClickItem,
+  isLoading,
+  onSearch,
+  searchDelay = 500,
+}) {
   const classes = useStyles();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -72,15 +82,19 @@ export default function SearchList({items, onClickItem, isLoading}) {
     }
   };
 
+  const updateSearchQuery = _.debounce((search) => {
+    console.log('debounce');
+    if (onSearch) {
+      onSearch(search);
+    } else {
+      setSearchQuery(search);
+    }
+    setMaxDisplayAmount(50);
+  }, searchDelay);
+
   const handleSearch = (event) => {
     event.persist();
-
-    const updateSearchQuery = _.debounce(() => {
-      setSearchQuery(event.target.value);
-      setMaxDisplayAmount(50);
-    }, 500);
-
-    updateSearchQuery();
+    updateSearchQuery(event.target.value);
   };
 
 
@@ -114,4 +128,6 @@ SearchList.propTypes = {
     }))]).isRequired,
   onClickItem: PropTypes.func.isRequired,
   isLoading: PropTypes.bool.isRequired,
+  onSearch: PropTypes.func,
+  searchDelay: PropTypes.number,
 };
