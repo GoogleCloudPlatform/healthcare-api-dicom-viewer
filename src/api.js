@@ -87,7 +87,8 @@ const fetchLocations = async (projectId) => {
  * @return {Promise<Array<string>>} List of datasets available
  */
 const fetchDatasets = async (projectId, location) => {
-  // TODO: Handle page tokens
+  // We currently don't support listing >100
+  // datasets as this is a rare edge case
   const data = await gapi.client.healthcare.projects.locations.datasets.list({
     parent: `projects/${projectId}/locations/${location}`,
   });
@@ -105,7 +106,8 @@ const fetchDatasets = async (projectId, location) => {
  * @return {Promise<Array<string>>} List of dicomStores available
  */
 const fetchDicomStores = async (projectId, location, dataset) => {
-  // TODO: Handle page tokens
+  // We currently don't support listing >100
+  // dicom stores as this is a rare edge case
   const data = await gapi.client.healthcare.projects.locations.datasets
       .dicomStores.list({
         parent: `projects/${projectId}/locations/${location}/` +
