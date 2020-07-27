@@ -2,7 +2,7 @@ import React from 'react';
 import {render, fireEvent, screen, waitFor} from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
 import * as api from '../../src/api.js';
-import * as auth from '../../src/auth.js';
+import Auth from '../../src/auth.js';
 import Main from '../../src/components/main.js';
 
 /**
@@ -29,8 +29,10 @@ jest.mock('../../src/auth.js');
 const {makeCancelable} = jest.requireActual('../../src/api.js');
 api.makeCancelable = makeCancelable;
 
-// Return a fake access token to avoid auth redirect
-auth.getAccessToken.mockReturnValue('FAKE_ACCESS_TOKEN');
+// Mock auth functions to prevent any use of the gapi client
+Auth.initClient.mockReturnValue(Promise.resolve());
+Auth.isSignedIn.mockReturnValue(true);
+Auth.getAccessToken.mockReturnValue('FAKE_ACCESS_TOKEN');
 
 // fetchProjects will resolve 5 mock projects
 api.fetchProjects.mockResolvedValue(
@@ -54,14 +56,10 @@ api.fetchDicomStores.mockResolvedValue(
 
 // fetchStudies will resolve 1 fake study
 api.fetchStudies.mockResolvedValue([{
-  '00100010': {
-    vr: 'PN',
-    Value: [{
-      Alphabetic: 'study1',
-    }],
+  '00100020': {
+    Value: ['study1'],
   },
   '0020000D': {
-    vr: 'UI',
     Value: ['study1-UID'],
   },
 }]);
@@ -69,11 +67,9 @@ api.fetchStudies.mockResolvedValue([{
 // fetchSeries will resolve 1 fake series
 api.fetchSeries.mockResolvedValue([{
   '0008103E': {
-    vr: 'LO',
     Value: ['series1'],
   },
   '0020000E': {
-    vr: 'UI',
     Value: ['series1-UID'],
   },
 }]);
