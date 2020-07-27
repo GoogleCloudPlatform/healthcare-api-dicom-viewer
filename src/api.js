@@ -169,16 +169,15 @@ const fetchSeries =
  * @return {Promise<Object[]>} List of instances in the series
  */
 const fetchInstances =
-async (projectId, location, dataset, dicomStore, studyId, seriesId) => {
-  const endpoint =
-    `/v1/projects/${projectId}/locations/${location}/datasets` +
-    `/${dataset}/dicomStores/${dicomStore}/dicomWeb/studies/${studyId}` +
-    `/series/${seriesId}/instances`;
-  const response =
-    await authenticatedFetch(HEALTHCARE_API_BASE + endpoint);
-  const data = await response.json();
+    async (projectId, location, dataset, dicomStore, studyId, seriesId) => {
+  const data = await gapi.client.healthcare.projects.locations.datasets
+    .dicomStores.studies.searchForInstances({
+      parent: `projects/${projectId}/locations/${location}/` +
+      `datasets/${dataset}/dicomStores/${dicomStore}`,
+      dicomWebPath: `studies/${studyId}/instances`,
+    });
 
-  return data;
+  return data.result;
 };
 
 /**
