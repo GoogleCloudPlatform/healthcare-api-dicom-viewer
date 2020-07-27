@@ -129,7 +129,7 @@ export default function Main() {
 
       // Add a new field "displayValue" to each series for the SearchList
       return data.map((series) => ({...series,
-        displayValue: series['0008103E'].Value[0]}));
+        displayValue: series['00080060'].Value[0]}));
     }, setSeriesLoading, setSeries);
 
   // Methods for selecting a list item and loading data for the next list
