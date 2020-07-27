@@ -96,7 +96,8 @@ export default function Main() {
     loadData(api.fetchProjects, setProjectsLoading, setProjects);
 
   const loadFilteredProjects = async (searchQuery) =>
-    loadData(() => api.fetchProjects(searchQuery), setProjectsLoading, setProjects);
+    loadData(() => api.fetchProjects(searchQuery),
+        setProjectsLoading, setProjects);
 
   const loadLocations = async (projectId) =>
     loadData(() => api.fetchLocations(projectId),

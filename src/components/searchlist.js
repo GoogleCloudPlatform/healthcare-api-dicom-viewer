@@ -82,6 +82,11 @@ export default function SearchList({
     }
   };
 
+  /**
+   * Debounce method to filter items after a period of time
+   *    without user input
+   * @param {string} search Search query to use for filtering
+   */
   const updateSearchQuery = _.debounce((search) => {
     if (onSearch) {
       onSearch(search);
@@ -91,11 +96,15 @@ export default function SearchList({
     setMaxDisplayAmount(50);
   }, searchDelay);
 
+  /**
+   * Handles a change in search query
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} event
+   * onChange event
+   */
   const handleSearch = (event) => {
     event.persist();
     updateSearchQuery(event.target.value);
   };
-
 
   return (
     <Box id="search-list">
