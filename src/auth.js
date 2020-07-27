@@ -1,81 +1,71 @@
 /** @module auth */
 import {CLIENT_ID} from './config.js';
 
-const REDIRECT_URI = location.href;
+let GoogleAuth;
+const SCOPE = [
+  'https://www.googleapis.com/auth/cloud-healthcare',
+  'https://www.googleapis.com/auth/cloudplatformprojects.readonly',
+].join(' ');
+const DISCOVERY_DOCS = [
+  'https://cloudresourcemanager.googleapis.com/$discovery/rest?version=v1',
+  'https://healthcare.googleapis.com/$discovery/rest?version=v1beta1',
+];
 
 /**
- * Redirect to Google OAuth2 sign-in page
+ * Initialize the gapi.client object
  */
-const signInToGoogle = () => {
-  // Google's OAuth 2.0 endpoint for requesting an access token
-  const oauth2Endpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
+const initClient = async () => {
+  return new Promise((resolve, reject) => {
+    gapi.load('client:auth2', () => {
+      const redirectUri = window.location.origin;
 
-  // Create element to open OAuth 2.0 endpoint in new window.
-  const form = document.createElement('form');
-  form.setAttribute('method', 'GET'); // Send as a GET request.
-  form.setAttribute('action', oauth2Endpoint);
-
-  // Parameters to pass to OAuth 2.0 endpoint.
-  const params = {
-    'client_id': CLIENT_ID,
-    'redirect_uri': REDIRECT_URI,
-    'scope': 'https://www.googleapis.com/auth/cloud-healthcare https://www.googleapis.com/auth/cloud-platform',
-    'include_granted_scopes': 'true',
-    'response_type': 'token',
-  };
-
-  // Add form parameters as hidden input values.
-  for (const p in params) {
-    if ({}.hasOwnProperty.call(params, p)) {
-      const input = document.createElement('input');
-      input.setAttribute('type', 'hidden');
-      input.setAttribute('name', p);
-      input.setAttribute('value', params[p]);
-      form.appendChild(input);
-    }
-  }
-
-  // Add form to page and submit it to open the OAuth 2.0 endpoint.
-  document.body.appendChild(form);
-  form.submit();
+      gapi.client.init({
+        'clientId': CLIENT_ID,
+        'scope': SCOPE,
+        'discoveryDocs': DISCOVERY_DOCS,
+        'ux_mode': 'redirect',
+        'redirect_uri': redirectUri,
+      }).then(() => {
+        GoogleAuth = gapi.auth2.getAuthInstance();
+        resolve();
+      }).catch((error) => {
+        reject(error);
+      });
+    });
+  });
 };
 
 /**
- * Removes access token from local storage
+ * Signs user in with GoogleAuth
+ * @return {Promise<GoogleUser>} Promise that resolves with
+ *    the Google User that was signed in
+*/
+const signIn = () => GoogleAuth.signIn();
+
+/**
+ * Signs user in with GoogleAuth
+ * @return {Promise} Promise that resolves when user is
+ *    signed out
  */
-const signOut = () => {
-  localStorage.removeItem('oauth2-params');
+const signOut = () => GoogleAuth.signOut();
+
+/**
+ * Checks if user is signed in or not
+ * @return {boolean} User signed in status
+ */
+const isSignedIn = () => GoogleAuth.isSignedIn.get();
+
+/**
+ * Sets the function to run when user's signed in state changes
+ * @param {function(boolean): any} callback Called when
+ *    signed in state changes
+ */
+const onSignedInChanged = (callback) => {
+  GoogleAuth.isSignedIn.listen(callback);
 };
 
 /**
- * Checks if the current url was redirected from Google Authentication
- * and stores the access token if so
- */
-const storeOAuthUrlParams = () => {
-  // Parse query string to see if page request is coming from OAuth 2.0 server.
-  const fragmentString = location.hash.substring(1);
-  const params = {};
-  const regex = /([^&=]+)=([^&]*)/g; let m;
-  while (m = regex.exec(fragmentString)) {
-    params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
-  }
-  if (Object.keys(params).length > 0) {
-    localStorage.setItem('oauth2-params', JSON.stringify(params));
-
-    // If access was denied, request login again
-    if (params.error) {
-      signInToGoogle();
-    }
-  }
-
-  // Clear parameters from url bar once stored
-  let currentUrl = location.href;
-  currentUrl = currentUrl.split('#')[0];
-  window.history.replaceState({}, document.title, currentUrl);
-};
-
-/**
- * Retrives the access token from local storage
+ * Retrives the access token from the GoogleAuth client
  * @return {string} Access token (or null if none present)
  */
 const getAccessToken = () => {
@@ -86,18 +76,20 @@ const getAccessToken = () => {
     return self.accessToken;
   }
 
-
-  const params = JSON.parse(localStorage.getItem('oauth2-params'));
-  if (params && params['access_token']) {
-    return params['access_token'];
+  if (isSignedIn()) {
+    return GoogleAuth.currentUser.get()
+        .getAuthResponse().access_token;
   }
   return null;
 };
 
-export {signInToGoogle, signOut, storeOAuthUrlParams, getAccessToken};
+const Auth = {
+  initClient,
+  signIn,
+  signOut,
+  isSignedIn,
+  onSignedInChanged,
+  getAccessToken,
+};
 
-// Run on every page load
-if (typeof WorkerGlobalScope === 'undefined' ||
-   !self instanceof WorkerGlobalScope) {
-  storeOAuthUrlParams();
-}
+export default Auth;

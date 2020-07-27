@@ -2,7 +2,7 @@ import React from 'react';
 import {render, fireEvent, screen, waitFor} from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
 import * as api from '../../src/api.js';
-import * as auth from '../../src/auth.js';
+import Auth from '../../src/auth.js';
 import Main from '../../src/components/main.js';
 
 /**
@@ -30,7 +30,7 @@ const {makeCancelable} = jest.requireActual('../../src/api.js');
 api.makeCancelable = makeCancelable;
 
 // Return a fake access token to avoid auth redirect
-auth.getAccessToken.mockReturnValue('FAKE_ACCESS_TOKEN');
+Auth.getAccessToken.mockReturnValue('FAKE_ACCESS_TOKEN');
 
 // fetchProjects will resolve 5 mock projects
 api.fetchProjects.mockResolvedValue(

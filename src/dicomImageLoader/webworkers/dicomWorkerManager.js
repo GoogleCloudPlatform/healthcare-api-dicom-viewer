@@ -1,5 +1,5 @@
 import WorkerLinkedList from './workerLinkedList.js';
-import * as auth from '../../auth.js';
+import Auth from '../../auth.js';
 
 /**
  * Class for managing webworkers to perform tasks related to dicom
@@ -72,7 +72,7 @@ class DicomWorkerManager {
       worker.worker.postMessage({
         task: 'fetchDicom',
         url,
-        accessToken: auth.getAccessToken(),
+        accessToken: Auth.getAccessToken(),
       });
       this.workers.incrementTasks(worker);
     });

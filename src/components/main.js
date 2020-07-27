@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import {makeStyles} from '@material-ui/core/styles';
 import {Typography, Breadcrumbs, Link, Box} from '@material-ui/core';
-import * as auth from '../auth.js';
+import Auth from '../auth.js';
 import * as api from '../api.js';
 import SearchList from './searchlist.js';
 import Viewer from './viewer.js';
@@ -56,21 +56,30 @@ export default function Main() {
   /* On mount, check if user is signed in already or not
   by checking for an access token in local storage */
   useEffect(() => {
-    const signedIn = Boolean(auth.getAccessToken());
-    setIsSignedIn(signedIn);
+    // Load GooglAuth library on mount
+    Auth.initClient().then(() => {
+      // Set up listener to listen to signed in state changes
+      Auth.onSignedInChanged((isSignedIn) => {
+        setIsSignedIn(isSignedIn);
+      });
 
-    if (signedIn) {
-      loadProjects();
-    } else {
-      signIn();
-    }
+      // Check if user is already signed in on page load
+      const signedIn = Auth.isSignedIn();
+      setIsSignedIn(signedIn);
+
+      if (signedIn) {
+        loadProjects();
+      } else {
+        signIn();
+      }
+    });
   }, []);
 
   /**
    * Signs the user in with Google
    */
   const signIn = () => {
-    auth.signInToGoogle();
+    Auth.signIn();
   };
 
   /**
@@ -95,6 +104,9 @@ export default function Main() {
   const loadProjects = async () =>
     loadData(api.fetchProjects, setProjectsLoading, setProjects);
 
+  const loadFilteredProjects = async (searchQuery) =>
+    loadData(() => api.fetchProjects(searchQuery), setProjectsLoading, setProjects);
+
   const loadLocations = async (projectId) =>
     loadData(() => api.fetchLocations(projectId),
         setLocationsLoading, setLocations);
@@ -114,7 +126,7 @@ export default function Main() {
 
       // Add a new field "displayValue" to each study for the SearchList
       return data.map((study) => ({...study,
-        displayValue: study['00100010'].Value[0].Alphabetic}));
+        displayValue: study['00100020'].Value[0]}));
     }, setStudiesLoading, setStudies);
 
   const loadSeries =
@@ -128,46 +140,32 @@ export default function Main() {
         displayValue: series['0008103E'].Value[0]}));
     }, setSeriesLoading, setSeries);
 
-  /**
-   * Sets project state and begins loading locations
-   * @param {string} projectId Project ID
-   */
+  // Methods for selecting a list item and loading data for the next list
+  /** @param {string} projectId Project to select */
   const selectProject = (projectId) => {
     setSelectedProject(projectId);
     loadLocations(projectId);
   };
 
-  /**
-   * Sets location state and begins loading datasets
-   * @param {string} locationId Location ID
-   */
+  /** @param {string} locationId Location to select */
   const selectLocation = (locationId) => {
     setSelectedLocation(locationId);
     loadDatasets(selectedProject, locationId);
   };
 
-  /**
-   * Sets dataset state and begins loading dicom stores
-   * @param {string} dataset Dataset name
-   */
+  /** @param {string} dataset Dataset to select */
   const selectDataset = (dataset) => {
     setSelectedDataset(dataset);
     loadDicomStores(selectedProject, selectedLocation, dataset);
   };
 
-  /**
-   * Sets dicomStore state and begins loading studies
-   * @param {string} dicomStore DicomStore name
-   */
+  /** @param {string} dicomStore Dicom Store to select */
   const selectDicomStore = (dicomStore) => {
     setSelectedDicomStore(dicomStore);
     loadStudies(selectedProject, selectedLocation, selectedDataset, dicomStore);
   };
 
-  /**
-   * Sets study state and begins loading series
-   * @param {Object} study Study object
-   */
+  /** @param {Object} study Study to select */
   const selectStudy = (study) => {
     setSelectedStudy(study);
 
@@ -175,10 +173,7 @@ export default function Main() {
         selectedDicomStore, study['0020000D'].Value[0]);
   };
 
-  /**
-   * Sets series state
-   * @param {Object} series Series object
-   */
+  /** @param {Object} series Series to select */
   const selectSeries = (series) => {
     setSelectedSeries(series);
   };
@@ -196,9 +191,7 @@ export default function Main() {
     loadProjects();
   };
 
-  /**
-   * Clears all state up to and including location
-   */
+  /** Clears all state up to and including location */
   const clearLocation = () => {
     setSelectedLocation(null);
 
@@ -251,7 +244,7 @@ export default function Main() {
         selectedDataset, selectedDicomStore);
   };
 
-  /** Clears series state */
+  /** Clears all state up to and including series */
   const clearSeries = () => {
     setSelectedSeries(null);
   };
@@ -261,6 +254,10 @@ export default function Main() {
     loadSeries(selectedProject, selectedLocation,
         selectedDataset, selectedDicomStore,
         selectedStudy['0020000D'].Value[0]);
+  };
+
+  const handleProjectSearch = (searchQuery) => {
+    loadFilteredProjects(searchQuery);
   };
 
   return (
@@ -323,7 +320,9 @@ export default function Main() {
         <SearchList
           items={projects}
           onClickItem={selectProject}
-          isLoading={projectsLoading} /> : null}
+          isLoading={projectsLoading}
+          onSearch={handleProjectSearch}
+          searchDelay={200} /> : null}
       {(selectedProject && !selectedLocation) ?
         <SearchList
           items={locations}
