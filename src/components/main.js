@@ -121,8 +121,8 @@ export default function Main() {
         displayValue: study['00100020'].Value[0]}));
     }, setStudiesLoading, setStudies);
 
-  const loadSeries =
-  async (projectId, location, dataset, dicomStore, studyId) =>
+  const loadSeries = 
+      async (projectId, location, dataset, dicomStore, studyId) =>
     loadData(async () => {
       const data = await api.fetchSeries(projectId, location,
           dataset, dicomStore, studyId);
