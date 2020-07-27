@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import {makeStyles} from '@material-ui/core/styles';
 import {Typography, Breadcrumbs, Link, Box} from '@material-ui/core';
-import * as auth from '../auth.js';
+import Auth from '../auth.js';
 import * as api from '../api.js';
 import SearchList from './searchlist.js';
 import Viewer from './viewer.js';
@@ -57,15 +57,14 @@ export default function Main() {
   by checking for an access token in local storage */
   useEffect(() => {
     // Load GooglAuth library on mount
-    gapi.load('client:auth2', auth.initClient);
-    auth.onInitialized(() => {
+    Auth.initClient().then(() => {
       // Set up listener to listen to signed in state changes
-      auth.onSignedInChanged((isSignedIn) => {
+      Auth.onSignedInChanged((isSignedIn) => {
         setIsSignedIn(isSignedIn);
       });
 
       // Check if user is already signed in on page load
-      const signedIn = auth.isSignedIn();
+      const signedIn = Auth.isSignedIn();
       setIsSignedIn(signedIn);
 
       if (signedIn) {
@@ -80,7 +79,7 @@ export default function Main() {
    * Signs the user in with Google
    */
   const signIn = () => {
-    auth.signIn();
+    Auth.signIn();
   };
 
   /**
@@ -104,6 +103,9 @@ export default function Main() {
   // Use loadData to generate functions for loading all state data
   const loadProjects = async () =>
     loadData(api.fetchProjects, setProjectsLoading, setProjects);
+
+  const loadFilteredProjects = async (searchQuery) =>
+    loadData(() => api.fetchProjects(searchQuery), setProjectsLoading, setProjects);
 
   const loadLocations = async (projectId) =>
     loadData(() => api.fetchLocations(projectId),
@@ -254,6 +256,10 @@ export default function Main() {
         selectedStudy['0020000D'].Value[0]);
   };
 
+  const handleProjectSearch = (searchQuery) => {
+    loadFilteredProjects(searchQuery);
+  };
+
   return (
     <div className={classes.root}>
       <Box m={2} display="flex" flexDirection="row">
@@ -314,7 +320,9 @@ export default function Main() {
         <SearchList
           items={projects}
           onClickItem={selectProject}
-          isLoading={projectsLoading} /> : null}
+          isLoading={projectsLoading}
+          onSearch={handleProjectSearch}
+          searchDelay={200} /> : null}
       {(selectedProject && !selectedLocation) ?
         <SearchList
           items={locations}
