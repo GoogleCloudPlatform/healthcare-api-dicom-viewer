@@ -114,7 +114,7 @@ const fetchStudies =
   const data = await gapi.client.healthcare.projects.locations.datasets
       .dicomStores.searchForStudies({
         parent: `projects/${projectId}/locations/${location}/` +
-    `datasets/${dataset}/dicomStores/${dicomStore}`,
+        `datasets/${dataset}/dicomStores/${dicomStore}`,
         dicomWebPath: 'studies',
       });
 
@@ -135,7 +135,7 @@ const fetchSeries =
   const data = await gapi.client.healthcare.projects.locations.datasets
       .dicomStores.studies.searchForSeries({
         parent: `projects/${projectId}/locations/${location}/` +
-    `datasets/${dataset}/dicomStores/${dicomStore}`,
+        `datasets/${dataset}/dicomStores/${dicomStore}`,
         dicomWebPath: `studies/${studyId}/series`,
       });
 
