@@ -83,7 +83,6 @@ export default function SearchList({
   };
 
   const updateSearchQuery = _.debounce((search) => {
-    console.log('debounce');
     if (onSearch) {
       onSearch(search);
     } else {
