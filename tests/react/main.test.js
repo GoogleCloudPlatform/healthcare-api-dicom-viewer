@@ -66,7 +66,7 @@ api.fetchStudies.mockResolvedValue([{
 
 // fetchSeries will resolve 1 fake series
 api.fetchSeries.mockResolvedValue([{
-  '0008103E': {
+  '00080060': {
     Value: ['series1'],
   },
   '0020000E': {
