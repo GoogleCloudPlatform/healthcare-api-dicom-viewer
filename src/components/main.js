@@ -22,35 +22,41 @@ export default function Main() {
   // Declare state variables
   const [, setIsSignedIn] = useState(false);
 
-  // Project state
-  const [projects, setProjects] = useState([]);
-  const [projectsLoading, setProjectsLoading] = useState(false);
-  const [selectedProject, setSelectedProject] = useState(null);
+  /**
+   * @typedef {Object} NavigationState
+   * @property {any[]} data
+   * @property {React.Dispatch<React.SetStateAction<any[]>>} setData
+   * @property {boolean} loading
+   * @property {React.Dispatch<React.SetStateAction<boolean>>} setLoading
+   * @property {any} selected
+   * @property {React.Dispatch<any>} setSelected
+   */
+  /**
+   * Function to generate state getters and setters for
+   * a list of data, loading state, and selected data
+   * @return {NavigationState} Object containing navigation state variables
+   */
+  const generateNavigationState = () => {
+    const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [selected, setSelected] = useState(null);
+    return {
+      data,
+      setData,
+      loading,
+      setLoading,
+      selected,
+      setSelected,
+    };
+  };
 
-  // Location state
-  const [locations, setLocations] = useState([]);
-  const [locationsLoading, setLocationsLoading] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState(null);
-
-  // Dataset state
-  const [datasets, setDatasets] = useState([]);
-  const [datasetsLoading, setDatasetsLoading] = useState(false);
-  const [selectedDataset, setSelectedDataset] = useState(null);
-
-  // DicomStore state
-  const [dicomStores, setDicomStores] = useState([]);
-  const [dicomStoresLoading, setDicomStoresLoading] = useState(false);
-  const [selectedDicomStore, setSelectedDicomStore] = useState(null);
-
-  // Study state
-  const [studies, setStudies] = useState([]);
-  const [studiesLoading, setStudiesLoading] = useState(false);
-  const [selectedStudy, setSelectedStudy] = useState(null);
-
-  // Series state
-  const [series, setSeries] = useState([]);
-  const [seriesLoading, setSeriesLoading] = useState(false);
-  const [selectedSeries, setSelectedSeries] = useState(null);
+  // Navigation state
+  const projects = generateNavigationState();
+  const locations = generateNavigationState();
+  const datasets = generateNavigationState();
+  const dicomStores = generateNavigationState();
+  const studies = generateNavigationState();
+  const series = generateNavigationState();
 
   /* On mount, check if user is signed in already or not
   by checking for an access token in local storage */
@@ -93,23 +99,23 @@ export default function Main() {
 
   // Use loadData to generate functions for loading all state data
   const loadProjects = async () =>
-    loadData(api.fetchProjects, setProjectsLoading, setProjects);
+    loadData(api.fetchProjects, projects.setLoading, projects.setData);
 
   const loadFilteredProjects = async (searchQuery) =>
     loadData(() => api.fetchProjects(searchQuery),
-        setProjectsLoading, setProjects);
+        projects.setLoading, projects.setData);
 
   const loadLocations = async (projectId) =>
     loadData(() => api.fetchLocations(projectId),
-        setLocationsLoading, setLocations);
+        locations.setLoading, locations.setData);
 
   const loadDatasets = async (projectId, location) =>
     loadData(() => api.fetchDatasets(projectId, location),
-        setDatasetsLoading, setDatasets);
+        datasets.setLoading, datasets.setData);
 
   const loadDicomStores = async (projectId, location, dataset) =>
     loadData(() => api.fetchDicomStores(projectId, location, dataset),
-        setDicomStoresLoading, setDicomStores);
+        dicomStores.setLoading, dicomStores.setData);
 
   const loadStudies = async (projectId, location, dataset, dicomStore) =>
     loadData(async () => {
@@ -119,55 +125,56 @@ export default function Main() {
       // Add a new field "displayValue" to each study for the SearchList
       return data.map((study) => ({...study,
         displayValue: study['00100020'].Value[0]}));
-    }, setStudiesLoading, setStudies);
+    }, studies.setLoading, studies.setData);
 
-  const loadSeries = 
+  const loadSeries =
       async (projectId, location, dataset, dicomStore, studyId) =>
-    loadData(async () => {
-      const data = await api.fetchSeries(projectId, location,
-          dataset, dicomStore, studyId);
+        loadData(async () => {
+          const data = await api.fetchSeries(projectId, location,
+              dataset, dicomStore, studyId);
 
-      // Add a new field "displayValue" to each series for the SearchList
-      return data.map((series) => ({...series,
-        displayValue: series['00080060'].Value[0]}));
-    }, setSeriesLoading, setSeries);
+          // Add a new field "displayValue" to each series for the SearchList
+          return data.map((series) => ({...series,
+            displayValue: series['00080060'].Value[0]}));
+        }, series.setLoading, series.setData);
 
   // Methods for selecting a list item and loading data for the next list
   /** @param {string} projectId Project to select */
   const selectProject = (projectId) => {
-    setSelectedProject(projectId);
+    projects.setSelected(projectId);
     loadLocations(projectId);
   };
 
   /** @param {string} locationId Location to select */
   const selectLocation = (locationId) => {
-    setSelectedLocation(locationId);
-    loadDatasets(selectedProject, locationId);
+    locations.setSelected(locationId);
+    loadDatasets(projects.selected, locationId);
   };
 
   /** @param {string} dataset Dataset to select */
   const selectDataset = (dataset) => {
-    setSelectedDataset(dataset);
-    loadDicomStores(selectedProject, selectedLocation, dataset);
+    datasets.setSelected(dataset);
+    loadDicomStores(projects.selected, locations.selected, dataset);
   };
 
   /** @param {string} dicomStore Dicom Store to select */
   const selectDicomStore = (dicomStore) => {
-    setSelectedDicomStore(dicomStore);
-    loadStudies(selectedProject, selectedLocation, selectedDataset, dicomStore);
+    dicomStores.setSelected(dicomStore);
+    loadStudies(projects.selected, locations.selected,
+        datasets.selected, dicomStore);
   };
 
   /** @param {Object} study Study to select */
   const selectStudy = (study) => {
-    setSelectedStudy(study);
+    studies.setSelected(study);
 
-    loadSeries(selectedProject, selectedLocation, selectedDataset,
-        selectedDicomStore, study['0020000D'].Value[0]);
+    loadSeries(projects.selected, locations.selected, datasets.selected,
+        dicomStores.selected, study['0020000D'].Value[0]);
   };
 
-  /** @param {Object} series Series to select */
-  const selectSeries = (series) => {
-    setSelectedSeries(series);
+  /** @param {Object} _series Series to select */
+  const selectSeries = (_series) => {
+    series.setSelected(_series);
   };
 
   /**
@@ -175,77 +182,77 @@ export default function Main() {
    * projects
    */
   const clearAndLoadProjects = () => {
-    setSelectedProject(null);
+    projects.setSelected(null);
 
     clearLocation();
-    setLocations([]);
+    locations.setData([]);
 
     loadProjects();
   };
 
   /** Clears all state up to and including location */
   const clearLocation = () => {
-    setSelectedLocation(null);
+    locations.setSelected(null);
 
     clearDataset();
-    setDatasets([]);
+    datasets.setData([]);
   };
   /** Clears location state and reloads locations list */
   const clearAndLoadLocations = () => {
     clearLocation();
-    loadLocations(selectedProject);
+    loadLocations(projects.selected);
   };
 
   /** Clears all state up to and including dataset */
   const clearDataset = () => {
-    setSelectedDataset(null);
+    datasets.setSelected(null);
 
     clearDicomStore();
-    setDicomStores([]);
+    dicomStores.setData([]);
   };
   /** Clears dataset state and reloads dataset list */
   const clearAndLoadDatasets = () => {
     clearDataset();
-    loadDatasets(selectedProject, selectedLocation);
+    loadDatasets(projects.selected, locations.selected);
   };
 
   /** Clears all state up to and including dicom store */
   const clearDicomStore = () => {
-    setSelectedDicomStore(null);
+    dicomStores.setSelected(null);
 
     clearStudy();
-    setStudies([]);
+    studies.setData([]);
   };
   /** Clears dicomStore state and reloads dicomStore list */
   const clearAndLoadDicomStores = () => {
     clearDicomStore();
-    loadDicomStores(selectedProject, selectedLocation, selectedDataset);
+    loadDicomStores(projects.selected, locations.selected, datasets.selected);
   };
 
   /** Clears all state up to and including study */
   const clearStudy = () => {
-    setSelectedStudy(null);
+    studies.setSelected(null);
 
     clearSeries();
-    setSeries([]);
+    series.setData([]);
   };
   /** Clears study state and reloads study list */
   const clearAndLoadStudies = () => {
     clearStudy();
-    loadStudies(selectedProject, selectedLocation,
-        selectedDataset, selectedDicomStore);
+    loadStudies(projects.selected, locations.selected,
+        datasets.selected, dicomStores.selected);
   };
 
   /** Clears all state up to and including series */
   const clearSeries = () => {
-    setSelectedSeries(null);
+    series.setSelected(null);
   };
   /** Clears series state and reloads series list */
   const clearAndLoadSeries = () => {
     clearSeries();
-    loadSeries(selectedProject, selectedLocation,
-        selectedDataset, selectedDicomStore,
-        selectedStudy['0020000D'].Value[0]);
+    loadSeries(projects.selected, locations.selected,
+        datasets.selected, dicomStores.selected,
+        studies.selected['0020000D'].Value[0]);
   };
 
   const handleProjectSearch = (searchQuery) => {
@@ -257,50 +264,50 @@ export default function Main() {
       <Box m={2} display="flex" flexDirection="row">
         <Box flexGrow={1}>
           <Breadcrumbs>
-            {selectedProject ?
+            {projects.selected ?
               <Link color="inherit" href="#" onClick={clearAndLoadProjects}>
-                {selectedProject}
+                {projects.selected}
               </Link> :
               <Typography color="textPrimary">
                 Select Project
               </Typography>}
-            {selectedLocation ?
+            {locations.selected ?
               <Link color="inherit" href="#" onClick={clearAndLoadLocations}>
-                {selectedLocation}
+                {locations.selected}
               </Link> :
-              selectedProject ?
+              projects.selected ?
                 <Typography color="textPrimary">
                   Select Location
                 </Typography> : null}
-            {selectedDataset ?
+            {datasets.selected ?
               <Link color="inherit" href="#" onClick={clearAndLoadDatasets}>
-                {selectedDataset}
+                {datasets.selected}
               </Link> :
-              selectedLocation ?
+              locations.selected ?
                 <Typography color="textPrimary">
                   Select Dataset
                 </Typography> : null}
-            {selectedDicomStore ?
+            {dicomStores.selected ?
               <Link color="inherit" href="#" onClick={clearAndLoadDicomStores}>
-                {selectedDicomStore}
+                {dicomStores.selected}
               </Link> :
-              selectedDataset ?
+              datasets.selected ?
                 <Typography color="textPrimary">
                   Select Dicom Store
                 </Typography> : null}
-            {selectedStudy ?
+            {studies.selected ?
               <Link color="inherit" href="#" onClick={clearAndLoadStudies}>
-                {selectedStudy.displayValue}
+                {studies.selected.displayValue}
               </Link> :
-              selectedDicomStore ?
+              dicomStores.selected ?
                 <Typography color="textPrimary">
                   Select Study
                 </Typography> : null}
-            {selectedSeries ?
+            {series.selected ?
               <Link color="inherit" href="#" onClick={clearAndLoadSeries}>
-                {selectedSeries.displayValue}
+                {series.selected.displayValue}
               </Link> :
-              selectedStudy ?
+              studies.selected ?
                 <Typography color="textPrimary">
                   Select Series
                 </Typography> : null}
@@ -308,38 +315,38 @@ export default function Main() {
         </Box>
       </Box>
 
-      {!selectedProject ?
+      {!projects.selected ?
         <SearchList
-          items={projects}
+          items={projects.data}
           onClickItem={selectProject}
-          isLoading={projectsLoading}
+          isLoading={projects.loading}
           onSearch={handleProjectSearch}
           searchDelay={200} /> : null}
-      {(selectedProject && !selectedLocation) ?
+      {(projects.selected && !locations.selected) ?
         <SearchList
-          items={locations}
+          items={locations.data}
           onClickItem={selectLocation}
-          isLoading={locationsLoading} /> : null}
-      {(selectedLocation && !selectedDataset) ?
+          isLoading={locations.loading} /> : null}
+      {(locations.selected && !datasets.selected) ?
         <SearchList
-          items={datasets}
+          items={datasets.data}
           onClickItem={selectDataset}
-          isLoading={datasetsLoading} /> : null}
-      {(selectedDataset && !selectedDicomStore) ?
+          isLoading={datasets.loading} /> : null}
+      {(datasets.selected && !dicomStores.selected) ?
         <SearchList
-          items={dicomStores}
+          items={dicomStores.data}
           onClickItem={selectDicomStore}
-          isLoading={dicomStoresLoading} /> : null}
-      {(selectedDicomStore && !selectedStudy) ?
+          isLoading={dicomStores.loading} /> : null}
+      {(dicomStores.selected && !studies.selected) ?
         <SearchList
-          items={studies}
+          items={studies.data}
           onClickItem={selectStudy}
-          isLoading={studiesLoading} /> : null}
-      {(selectedStudy && !selectedSeries) ?
+          isLoading={studies.loading} /> : null}
+      {(studies.selected && !series.selected) ?
         <SearchList
-          items={series}
+          items={series.data}
           onClickItem={selectSeries}
-          isLoading={seriesLoading} /> : null}
+          isLoading={series.loading} /> : null}
     </div >
   );
 }
