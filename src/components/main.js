@@ -118,63 +118,55 @@ export default function Main() {
         dicomStores.setLoading, dicomStores.setData);
 
   const loadStudies = async (projectId, location, dataset, dicomStore) =>
-    loadData(async () => {
-      const data = await api.fetchStudies(projectId, location,
-          dataset, dicomStore);
-
-      // Add a new field "displayValue" to each study for the SearchList
-      return data.map((study) => ({...study,
-        displayValue: study['00100020'].Value[0]}));
-    }, studies.setLoading, studies.setData);
+    loadData(() => api.fetchStudies(projectId, location, dataset, dicomStore),
+        studies.setLoading, studies.setData);
 
   const loadSeries =
       async (projectId, location, dataset, dicomStore, studyId) =>
-        loadData(async () => {
-          const data = await api.fetchSeries(projectId, location,
-              dataset, dicomStore, studyId);
-
-          // Add a new field "displayValue" to each series for the SearchList
-          return data.map((series) => ({...series,
-            displayValue: series['00080060'].Value[0]}));
-        }, series.setLoading, series.setData);
+    loadData(() => api.fetchSeries(projectId, location, dataset, dicomStore, studyId),
+        series.setLoading, series.setData);
 
   // Methods for selecting a list item and loading data for the next list
-  /** @param {string} projectId Project to select */
-  const selectProject = (projectId) => {
+  /** @param {number} index Index of project in project list */
+  const selectProject = (index) => {
+    const projectId = projects.data[index];
     projects.setSelected(projectId);
     loadLocations(projectId);
   };
 
-  /** @param {string} locationId Location to select */
-  const selectLocation = (locationId) => {
+  /** @param {number} index Index of location in location list */
+  const selectLocation = (index) => {
+    const locationId = locations.data[index];
     locations.setSelected(locationId);
     loadDatasets(projects.selected, locationId);
   };
 
-  /** @param {string} dataset Dataset to select */
-  const selectDataset = (dataset) => {
+  /** @param {number} index Index of dataset in dataset list */
+  const selectDataset = (index) => {
+    const dataset = datasets.data[index];
     datasets.setSelected(dataset);
     loadDicomStores(projects.selected, locations.selected, dataset);
   };
 
-  /** @param {string} dicomStore Dicom Store to select */
-  const selectDicomStore = (dicomStore) => {
+  /** @param {number} index Index of dicom dtore in dicom dtore list */
+  const selectDicomStore = (index) => {
+    const dicomStore = dicomStores.data[index];
     dicomStores.setSelected(dicomStore);
     loadStudies(projects.selected, locations.selected,
         datasets.selected, dicomStore);
   };
 
-  /** @param {Object} study Study to select */
-  const selectStudy = (study) => {
+  /** @param {number} index Index of study in study list */
+  const selectStudy = (index) => {
+    const study = studies.data[index];
     studies.setSelected(study);
-
     loadSeries(projects.selected, locations.selected, datasets.selected,
         dicomStores.selected, study['0020000D'].Value[0]);
   };
 
-  /** @param {Object} _series Series to select */
-  const selectSeries = (_series) => {
-    series.setSelected(_series);
+  /** @param {number} index Index of series in series list */
+  const selectSeries = (index) => {
+    series.setSelected(series.data[index]);
   };
 
   /**
@@ -288,7 +280,7 @@ export default function Main() {
                 </Typography> : null}
             {studies.selected ?
               <Link color="inherit" href="#" onClick={reloadStudies}>
-                {studies.selected.displayValue}
+                {studies.selected['00100020'].Value[0]}
               </Link> :
               dicomStores.selected ?
                 <Typography color="textPrimary">
@@ -296,7 +288,7 @@ export default function Main() {
                 </Typography> : null}
             {series.selected ?
               <Link color="inherit" href="#" onClick={reloadSeries}>
-                {series.selected.displayValue}
+                {series.selected['00080060'].Value[0]}
               </Link> :
               studies.selected ?
                 <Typography color="textPrimary">
@@ -330,14 +322,14 @@ export default function Main() {
           isLoading={dicomStores.loading} /> : null}
       {(dicomStores.selected && !studies.selected) ?
         <SearchList
-          items={studies.data}
+          items={studies.data.map((study) => study['00100020'].Value[0])}
           onClickItem={selectStudy}
           isLoading={studies.loading} /> : null}
       {(studies.selected && !series.selected) ?
         <SearchList
-          items={series.data}
+          items={series.data.map((series) => series['00080060'].Value[0])}
           onClickItem={selectSeries}
           isLoading={series.loading} /> : null}
-    </div >
+    </div>
   );
 }
