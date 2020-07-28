@@ -178,78 +178,69 @@ export default function Main() {
   };
 
   /**
-   * Clears all state up to and including project and reloads
-   * projects
+   * Resets all navigation state after and including the given
+   * navigation state value
+   * @param {('project'|'location'|'dataset'|
+   * 'dicomStore'|'study'|'series')} navigationStr Navigation state to reset
    */
-  const clearAndLoadProjects = () => {
-    projects.setSelected(null);
+  const resetChainedState = (navigationStr) => {
+    switch (navigationStr) {
+      case 'project':
+        projects.setSelected(null);
+        projects.setData([]);
+      case 'location':
+        locations.setSelected(null);
+        locations.setData([]);
+      case 'dataset':
+        datasets.setSelected(null);
+        datasets.setData([]);
+      case 'dicomStore':
+        dicomStores.setSelected(null);
+        dicomStores.setData([]);
+      case 'study':
+        studies.setSelected(null);
+        studies.setData([]);
+      case 'series':
+        series.setSelected(null);
+        series.setData([]);
+    }
+  };
 
-    clearLocation();
-    locations.setData([]);
-
+  /** Clears all state after and including projects and reloads project list */
+  const reloadProjects = () => {
+    resetChainedState('project');
     loadProjects();
   };
 
-  /** Clears all state up to and including location */
-  const clearLocation = () => {
-    locations.setSelected(null);
-
-    clearDataset();
-    datasets.setData([]);
-  };
-  /** Clears location state and reloads locations list */
-  const clearAndLoadLocations = () => {
-    clearLocation();
+  /** Clears all state after and including locations and reloads project list */
+  const reloadLocations = () => {
+    resetChainedState('location');
     loadLocations(projects.selected);
   };
 
-  /** Clears all state up to and including dataset */
-  const clearDataset = () => {
-    datasets.setSelected(null);
-
-    clearDicomStore();
-    dicomStores.setData([]);
-  };
-  /** Clears dataset state and reloads dataset list */
-  const clearAndLoadDatasets = () => {
-    clearDataset();
+  /** Clears all state after and including datasets and reloads dataset list */
+  const reloadDatasets = () => {
+    resetChainedState('dataset');
     loadDatasets(projects.selected, locations.selected);
   };
 
-  /** Clears all state up to and including dicom store */
-  const clearDicomStore = () => {
-    dicomStores.setSelected(null);
-
-    clearStudy();
-    studies.setData([]);
-  };
-  /** Clears dicomStore state and reloads dicomStore list */
-  const clearAndLoadDicomStores = () => {
-    clearDicomStore();
+  /** Clears all state after and including dicom
+   * stores and reloads dicom store list */
+  const reloadDicomStores = () => {
+    resetChainedState('dicomStore');
     loadDicomStores(projects.selected, locations.selected, datasets.selected);
   };
 
-  /** Clears all state up to and including study */
-  const clearStudy = () => {
-    studies.setSelected(null);
-
-    clearSeries();
-    series.setData([]);
-  };
-  /** Clears study state and reloads study list */
-  const clearAndLoadStudies = () => {
-    clearStudy();
+  /** Clears all state after and including studies and reloads study list */
+  const reloadStudies = () => {
+    resetChainedState('study');
     loadStudies(projects.selected, locations.selected,
         datasets.selected, dicomStores.selected);
   };
 
-  /** Clears all state up to and including series */
-  const clearSeries = () => {
-    series.setSelected(null);
-  };
   /** Clears series state and reloads series list */
-  const clearAndLoadSeries = () => {
-    clearSeries();
+  const reloadSeries = () => {
+    resetChainedState('series');
     loadSeries(projects.selected, locations.selected,
         datasets.selected, dicomStores.selected,
         studies.selected['0020000D'].Value[0]);
@@ -265,14 +256,14 @@ export default function Main() {
         <Box flexGrow={1}>
           <Breadcrumbs>
             {projects.selected ?
-              <Link color="inherit" href="#" onClick={clearAndLoadProjects}>
+              <Link color="inherit" href="#" onClick={reloadProjects}>
                 {projects.selected}
               </Link> :
               <Typography color="textPrimary">
                 Select Project
               </Typography>}
             {locations.selected ?
-              <Link color="inherit" href="#" onClick={clearAndLoadLocations}>
+              <Link color="inherit" href="#" onClick={reloadLocations}>
                 {locations.selected}
               </Link> :
               projects.selected ?
@@ -280,7 +271,7 @@ export default function Main() {
                   Select Location
                 </Typography> : null}
             {datasets.selected ?
-              <Link color="inherit" href="#" onClick={clearAndLoadDatasets}>
+              <Link color="inherit" href="#" onClick={reloadDatasets}>
                 {datasets.selected}
               </Link> :
               locations.selected ?
@@ -288,7 +279,7 @@ export default function Main() {
                   Select Dataset
                 </Typography> : null}
             {dicomStores.selected ?
-              <Link color="inherit" href="#" onClick={clearAndLoadDicomStores}>
+              <Link color="inherit" href="#" onClick={reloadDicomStores}>
                 {dicomStores.selected}
               </Link> :
               datasets.selected ?
@@ -296,7 +287,7 @@ export default function Main() {
                   Select Dicom Store
                 </Typography> : null}
             {studies.selected ?
-              <Link color="inherit" href="#" onClick={clearAndLoadStudies}>
+              <Link color="inherit" href="#" onClick={reloadStudies}>
                 {studies.selected.displayValue}
               </Link> :
               dicomStores.selected ?
@@ -304,7 +295,7 @@ export default function Main() {
                   Select Study
                 </Typography> : null}
             {series.selected ?
-              <Link color="inherit" href="#" onClick={clearAndLoadSeries}>
+              <Link color="inherit" href="#" onClick={reloadSeries}>
                 {series.selected.displayValue}
               </Link> :
               studies.selected ?
