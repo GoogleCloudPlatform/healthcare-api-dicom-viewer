@@ -4,9 +4,23 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "test": "jest",
     "start": "webpack-dev-server --open --port 1234 --host 127.0.0.1",
     "build": "webpack",
     "docs": "jsdoc ./src --destination dist/docs"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "jsx"
+    ],
+    "moduleDirectories": [
+      "node_modules"
+    ],
+    "moduleNameMapper": {
+      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/__mocks__/fileMock.js",
+      "\\.(css|less)$": "<rootDir>/__mocks__/styleMock.js"
+    }
   },
   "keywords": [],
   "author": "",
@@ -15,20 +29,23 @@
     "@material-ui/core": "^4.10.1",
     "@types/react": "^16.9.35",
     "react": "^16.13.1",
-    "react-dom": "^16.13.1",
-    "react-router-dom": "^5.2.0"
+    "react-dom": "^16.13.1"
   },
   "devDependencies": {
     "@babel/core": "^7.10.2",
     "@babel/plugin-transform-runtime": "^7.10.3",
     "@babel/preset-env": "^7.10.2",
     "@babel/preset-react": "^7.10.1",
+    "@testing-library/jest-dom": "^5.10.1",
+    "@testing-library/react": "^10.4.2",
+    "babel-jest": "^26.1.0",
     "babel-loader": "^8.1.0",
     "babel-polyfill": "^6.26.0",
     "css-loader": "^3.5.3",
     "eslint": "^7.2.0",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-react": "^7.20.0",
+    "jest": "^26.1.0",
     "jsdoc": "^3.6.4",
     "style-loader": "^1.2.1",
     "webpack": "^4.43.0",
