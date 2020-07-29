@@ -53,7 +53,8 @@ test('Only first 50 items are displayed until user scrolls', () => {
 
 test('onClickItem callback returns item3 when item3 is clicked', (done) => {
   const items = generateItems(5);
-  const onClickItem = (item) => {
+  const onClickItem = (index) => {
+    const item = items[index];
     expect(item).toBe('item3');
     done();
   };
