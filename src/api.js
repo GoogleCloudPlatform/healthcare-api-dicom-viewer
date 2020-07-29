@@ -30,9 +30,6 @@ const authenticatedFetch = async (url) => {
   }
 };
 
-// TODO: Add ability to filter by search query, to
-//       later implement with navigation views
-// https://github.com/GoogleCloudPlatform/healthcare-api-dicom-viewer/issues/6
 /**
  * Fetches one page of user's google cloud project ids
  * @param {string=} searchQuery Optional search query to filter project ids
@@ -43,6 +40,9 @@ const fetchProjects = async (searchQuery) => {
   if (searchQuery) {
     request.filter = `id:${searchQuery}*`;
   }
+  // Only fetch one page to avoid taking too long to load. User will
+  // most likely not scroll through more than a page of projects, so search
+  // query is used to find specific projects
   const data = await gapi.client.cloudresourcemanager.projects.list(request);
 
   return data.result.projects.map((project) => project.projectId);
