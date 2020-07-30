@@ -1,5 +1,4 @@
 import React from 'react';
-import {BrowserRouter as Router, Switch} from 'react-router-dom';
 
 import Main from './components/main.js';
 
@@ -11,10 +10,6 @@ import './App.css';
  */
 export default function App() {
   return (
-    <Router>
-      <Switch path="/">
-        <Main/>
-      </Switch>
-    </Router>
+    <Main/>
   );
 }

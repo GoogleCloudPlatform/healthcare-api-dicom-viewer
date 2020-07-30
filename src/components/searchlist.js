@@ -13,7 +13,9 @@ const useStyles = makeStyles((theme) => ({
 /**
  * React component for creating a list of items filtered using a search query
  * @param {Object} props
- * @param {string[] | Object[]} props.items Array of items to be filtered
+ * @param {Object[]} props.items Array of items to be filtered
+ * @param {string} props.items[].value
+ * @param {number} props.items[].index
  * @param {string} props.searchQuery Search query to filter with
  * @param {function(string): *} props.onClickItem Function to run when
  *   user clicks an item
@@ -22,18 +24,14 @@ const useStyles = makeStyles((theme) => ({
  */
 function FilterItems({items, searchQuery, onClickItem, maxDisplayAmount}) {
   const filteredItems = items.filter((item) => {
-    if (typeof item == 'string') {
-      return item.toLowerCase().includes(searchQuery.toLowerCase().trim());
-    }
-    return item.displayValue.toLowerCase()
-        .includes(searchQuery.toLowerCase().trim());
+    return item.value.toLowerCase().includes(searchQuery.toLowerCase().trim());
   });
 
-  return filteredItems.slice(0, maxDisplayAmount).map((item, index) => {
+  return filteredItems.slice(0, maxDisplayAmount).map((item) => {
     return (
-      <ListItem button key={index} onClick={() => onClickItem(item)}>
+      <ListItem button key={item.index} onClick={() => onClickItem(item.index)}>
         <ListItemText
-          primary={typeof item == 'string' ? item : item.displayValue} />
+          primary={item.value} />
       </ListItem>
     );
   });
@@ -64,6 +62,13 @@ export default function SearchList({
   const [searchQuery, setSearchQuery] = useState('');
   const [maxDisplayAmount, setMaxDisplayAmount] = useState(50);
 
+  // Track the index of each item to retain accurate indexing even
+  // after items have been filtered
+  items = items.map((value, index) => ({
+    value,
+    index,
+  }));
+
   // On mount, set up up scroll events to load more results as user scrolls
   useEffect(() => {
     document.addEventListener('scroll', onScroll);
@@ -85,8 +90,12 @@ export default function SearchList({
     }
   };
 
+  /**
+   * Debounce method to filter items after a period of time
+   *    without user input
+   * @param {string} search Search query to use for filtering
+   */
   const updateSearchQuery = _.debounce((search) => {
-    console.log('debounce');
     if (onSearch) {
       onSearch(search);
     } else {
@@ -104,7 +113,6 @@ export default function SearchList({
     event.persist();
     updateSearchQuery(event.target.value);
   };
-
 
   return (
     <Box id="search-list">
@@ -129,11 +137,7 @@ export default function SearchList({
   );
 }
 SearchList.propTypes = {
-  items: PropTypes.oneOfType([
-    PropTypes.arrayOf(PropTypes.string).isRequired,
-    PropTypes.arrayOf(PropTypes.shape({
-      displayValue: PropTypes.string.isRequired,
-    }))]).isRequired,
+  items: PropTypes.arrayOf(PropTypes.string).isRequired,
   onClickItem: PropTypes.func.isRequired,
   isLoading: PropTypes.bool.isRequired,
   onSearch: PropTypes.func,
