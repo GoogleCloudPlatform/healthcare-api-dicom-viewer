@@ -339,7 +339,7 @@ export default function Main() {
           items={series.data.map((series) => series['00080060'].Value[0])}
           onClickItem={selectSeries}
           isLoading={series.loading} /> : null}
-      {selectedSeries ?
+      {series.selected ?
         <Viewer
           project={projects.selected}
           location={locations.selected}
