@@ -188,11 +188,15 @@ const fetchInstances =
 const fetchDicomFile = async (url) => {
   const response = await authenticatedFetch(url, {
     headers: {
-      'Accept': 'application/dicom; transfer-syntax=*',
+      'Accept': 'multipart/related;' +
+                'type="application/dicom";' +
+                'transfer-syntax=1.2.840.10008.1.2.1',
     },
   });
 
-  const arrayBuffer = await response.arrayBuffer();
+  let arrayBuffer = await response.arrayBuffer();
+  // Strip multipart header from arrayBuffer
+  arrayBuffer = arrayBuffer.slice(136, arrayBuffer.byteLength - 68);
   return new Uint8Array(arrayBuffer);
 };
 
