@@ -1,5 +1,10 @@
 /** @module api */
 import Auth from './auth.js';
+import {
+  DICOM_CONTENT_TYPE,
+  DCM_BOUNDARY_TOP_BYTE_LEN,
+  DCM_BOUNDARY_BOTTOM_BYTE_LEN,
+} from './dicomValues.js';
 
 /**
  * Fetches a url using a stored access token, signing the user in
@@ -188,16 +193,17 @@ const fetchInstances =
 const fetchDicomFile = async (url) => {
   const response = await authenticatedFetch(url, {
     headers: {
-      'Accept': 'multipart/related;' +
-                'type="application/dicom";' +
-                'transfer-syntax=1.2.840.10008.1.2.1',
+      'Accept': DICOM_CONTENT_TYPE,
     },
   });
 
-  let arrayBuffer = await response.arrayBuffer();
-  // Strip multipart header from arrayBuffer
-  arrayBuffer = arrayBuffer.slice(136, arrayBuffer.byteLength - 68);
-  return new Uint8Array(arrayBuffer);
+  const arrayBuffer = await response.arrayBuffer();
+  // Strip multipart boundary from response
+  const offset = DCM_BOUNDARY_TOP_BYTE_LEN;
+  const length = arrayBuffer.byteLength -
+      DCM_BOUNDARY_TOP_BYTE_LEN - DCM_BOUNDARY_BOTTOM_BYTE_LEN;
+
+  return new Uint8Array(arrayBuffer, offset, length);
 };
 
 /**

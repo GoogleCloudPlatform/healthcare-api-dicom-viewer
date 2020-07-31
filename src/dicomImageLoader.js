@@ -1,6 +1,7 @@
 /** @module dicomImageLoader */
 import * as api from './api.js';
 import * as dicomParser from 'dicom-parser';
+import {DCM_BOUNDARY_TOP_BYTE_LEN} from './dicomValues.js';
 
 /**
  * Creates a cornerstone image object from a DICOM P10 file
@@ -20,8 +21,11 @@ const createImageObjectFromDicom = (imageId, dicomByteArray) => {
 
   // Get pixel data from dicomParser
   const pixelDataElement = dataSet.elements.x7fe00010;
-  const pixelData = new Int16Array(dataSet.byteArray.buffer,
-      pixelDataElement.dataOffset);
+  const pixelData = new Int16Array(
+      dataSet.byteArray.buffer,
+      pixelDataElement.dataOffset + DCM_BOUNDARY_TOP_BYTE_LEN,
+      pixelDataElement.length / 2,
+  );
 
   const getPixelData = () => pixelData;
 
