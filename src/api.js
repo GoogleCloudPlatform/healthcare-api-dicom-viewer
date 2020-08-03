@@ -163,7 +163,7 @@ const fetchSeries =
 };
 
 /**
- * Fetches a list of instances in a given
+ * Fetches a list of metadata for all instances in a given
  *    project/location/dataset/dicomStore/study/series
  * @param {string} projectId Project ID
  * @param {string} location Location
@@ -171,15 +171,15 @@ const fetchSeries =
  * @param {string} dicomStore Dicom Store
  * @param {string} studyId Study UID
  * @param {string} seriesId Series UID
- * @return {Promise<Object[]>} List of instances in the series
+ * @return {Promise<Object<string, Object>[]>} List of metadata for all instances in the series
  */
-const fetchInstances =
+const fetchMetadata =
     async (projectId, location, dataset, dicomStore, studyId, seriesId) => {
   const data = await gapi.client.healthcare.projects.locations.datasets
-    .dicomStores.studies.series.searchForInstances({
+    .dicomStores.studies.series.retrieveMetadata({
       parent: `projects/${projectId}/locations/${location}/` +
       `datasets/${dataset}/dicomStores/${dicomStore}`,
-      dicomWebPath: `studies/${studyId}/series/${seriesId}/instances`,
+      dicomWebPath: `studies/${studyId}/series/${seriesId}/metadata`,
     });
 
   return data.result;
@@ -199,13 +199,13 @@ const fetchDicomFile = async (url) => {
     },
   });
 
-  const arrayBuffer = await response.arrayBuffer();
+  let arrayBuffer = await response.arrayBuffer();
   // Strip multipart boundary from response
-  const offset = DCM_BOUNDARY_TOP_BYTE_LEN;
-  const length = arrayBuffer.byteLength -
-      DCM_BOUNDARY_TOP_BYTE_LEN - DCM_BOUNDARY_BOTTOM_BYTE_LEN;
+  const startIndex = DCM_BOUNDARY_TOP_BYTE_LEN;
+  const endIndex = arrayBuffer.byteLength - DCM_BOUNDARY_BOTTOM_BYTE_LEN;
+  arrayBuffer = arrayBuffer.slice(startIndex, endIndex);
 
-  return new Uint8Array(arrayBuffer, offset, length);
+  return new Int16Array(arrayBuffer);
 };
 
 /**
@@ -240,6 +240,15 @@ const makeCancelable = (promise) => {
   };
 };
 
-export {authenticatedFetch, fetchProjects, fetchLocations, fetchDatasets,
-  fetchDicomStores, fetchStudies, fetchSeries, fetchInstances, fetchDicomFile,
-  makeCancelable};
+export {
+  authenticatedFetch,
+  fetchProjects,
+  fetchLocations,
+  fetchDatasets,
+  fetchDicomStores,
+  fetchStudies,
+  fetchSeries,
+  fetchMetadata,
+  fetchDicomFile,
+  makeCancelable,
+};

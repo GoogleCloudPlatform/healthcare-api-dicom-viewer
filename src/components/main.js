@@ -3,6 +3,7 @@ import {makeStyles} from '@material-ui/core/styles';
 import {Typography, Breadcrumbs, Link, Box} from '@material-ui/core';
 import Auth from '../auth.js';
 import * as api from '../api.js';
+import {DICOM_TAGS} from '../dicomValues.js';
 import SearchList from './searchlist.js';
 import Viewer from './viewer.js';
 
@@ -170,7 +171,7 @@ export default function Main() {
     const study = studies.data[index];
     studies.setSelected(study);
     loadSeries(projects.selected, locations.selected, datasets.selected,
-        dicomStores.selected, study['0020000D'].Value[0]);
+        dicomStores.selected, study[DICOM_TAGS.STUDY_UID].Value[0]);
   };
 
   /** @param {number} index Index of series in series list */
@@ -244,7 +245,7 @@ export default function Main() {
     resetChainedState('series');
     loadSeries(projects.selected, locations.selected,
         datasets.selected, dicomStores.selected,
-        studies.selected['0020000D'].Value[0]);
+        studies.selected[DICOM_TAGS.STUDY_UID].Value[0]);
   };
 
   const handleProjectSearch = (searchQuery) => {
@@ -289,7 +290,7 @@ export default function Main() {
                 </Typography> : null}
             {studies.selected ?
               <Link color="inherit" href="#" onClick={reloadStudies}>
-                {studies.selected['00100020'].Value[0]}
+                {studies.selected[DICOM_TAGS.PATIENT_ID].Value[0]}
               </Link> :
               dicomStores.selected ?
                 <Typography color="textPrimary">
@@ -297,7 +298,7 @@ export default function Main() {
                 </Typography> : null}
             {series.selected ?
               <Link color="inherit" href="#" onClick={reloadSeries}>
-                {series.selected['00080060'].Value[0]}
+                {series.selected[DICOM_TAGS.MODALITY].Value[0]}
               </Link> :
               studies.selected ?
                 <Typography color="textPrimary">
@@ -331,12 +332,14 @@ export default function Main() {
           isLoading={dicomStores.loading} /> : null}
       {(dicomStores.selected && !studies.selected) ?
         <SearchList
-          items={studies.data.map((study) => study['00100020'].Value[0])}
+          items={studies.data.map((study) =>
+            study[DICOM_TAGS.PATIENT_ID].Value[0])}
           onClickItem={selectStudy}
           isLoading={studies.loading} /> : null}
       {(studies.selected && !series.selected) ?
         <SearchList
-          items={series.data.map((series) => series['00080060'].Value[0])}
+          items={series.data.map((series) =>
+            series[DICOM_TAGS.MODALITY].Value[0])}
           onClickItem={selectSeries}
           isLoading={series.loading} /> : null}
       {series.selected ?

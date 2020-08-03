@@ -4,6 +4,7 @@ import {Paper, Box, LinearProgress, Typography,
   TextField, Button} from '@material-ui/core';
 import * as cornerstone from 'cornerstone-core';
 import * as api from '../api.js';
+import {DICOM_TAGS} from '../dicomValues.js';
 import DicomImageSequencer from '../dicomImageSequencer.js';
 
 /**
@@ -137,11 +138,11 @@ export default class Viewer extends React.Component {
    */
   async getInstances() {
     this.getInstancesPromise = api.makeCancelable(
-        api.fetchInstances(
+        api.fetchMetadata(
             this.props.project, this.props.location,
             this.props.dataset, this.props.dicomStore,
-            this.props.study['0020000D'].Value[0],
-            this.props.series['0020000E'].Value[0],
+            this.props.study[DICOM_TAGS.STUDY_UID].Value[0],
+            this.props.series[DICOM_TAGS.SERIES_UID].Value[0],
         ));
 
     this.getInstancesPromise.promise

@@ -1,37 +1,57 @@
 /** @module dicomImageLoader */
 import * as api from './api.js';
-import * as dicomParser from 'dicom-parser';
-import {DCM_BOUNDARY_TOP_BYTE_LEN} from './dicomValues.js';
+import {DICOM_TAGS} from './dicomValues.js';
 import {IMAGE_LOADER_PREFIX} from './config.js';
 
+/** Stores metaData for each imageId
+ * @type {Object.<string, object>} */
+const metaDataDict = {};
+
 /**
- * Creates a cornerstone image object from a DICOM P10 file
+ * Sets metaData value for a specific instance imageId
+ * @param {string} imageId The imageId for the instance
+ * @param {Object} metaData The metaData for the instance
+ */
+const setMetadata = (imageId, metaData) => {
+  // Map the Value object to metaData.
+  const mappedMetaData = {};
+  for (const key in metaData) {
+    if (metaData.hasOwnProperty(key)) {
+      const value = metaData[key].Value;
+      if (value) {
+        // If value is an array with one value, simply store the
+        // value, otherwise store the whole array
+        if (value.length == 1) {
+          mappedMetaData[key] = value[0];
+        } else {
+          mappedMetaData[key] = value;
+        }
+      }
+    }
+  }
+  metaDataDict[imageId] = mappedMetaData;
+};
+
+/**
+ * Creates a cornerstone image object from metadata and pixel data
  * @param {string} imageId The imageId associated with this dicom image
- * @param {Uint8Array} dicomByteArray Byte array of P10 DICOM contents
+ * @param {Int16Array} pixelData Pixel data array of DICOM image
  * @return {Object} Cornerstone image object
  */
-const createImageObjectFromDicom = (imageId, dicomByteArray) => {
-  // Parse dicom data to retrieve image values
-  const dataSet = dicomParser.parseDicom(dicomByteArray);
+const createImageObjectFromDicom = (imageId, pixelData) => {
+  // Retrieve metaData for this instance
+  const metaData = metaDataDict[imageId];
 
-  const width = dataSet.uint16('x00280011');
-  const height = dataSet.uint16('x00280010');
+  const height = metaData[DICOM_TAGS.NUM_ROWS];
+  const width = metaData[DICOM_TAGS.NUM_COLUMNS];
 
-  const photoInterp = dataSet.string('x00280004');
+  const photoInterp = metaData[DICOM_TAGS.PHOTO_INTERP];
   const invert = photoInterp == 'MONOCHROME1' ? true: false;
-
-  // Get pixel data from dicomParser
-  const pixelDataElement = dataSet.elements.x7fe00010;
-  const pixelData = new Int16Array(
-      dataSet.byteArray.buffer,
-      pixelDataElement.dataOffset + DCM_BOUNDARY_TOP_BYTE_LEN,
-      pixelDataElement.length / 2,
-  );
 
   const getPixelData = () => pixelData;
 
   // Calculate min pixel value if not provided in dicom file
-  let minPixelValue = dataSet.int16('x00280106');
+  let minPixelValue = metaData[DICOM_TAGS.MIN_PIXEL_VAL];
   if (!minPixelValue) {
     minPixelValue = pixelData[0];
     for (let i = 1; i < pixelData.length; i++) {
@@ -42,7 +62,7 @@ const createImageObjectFromDicom = (imageId, dicomByteArray) => {
   }
 
   // Calculate max pixel value if not provided in dicom file
-  let maxPixelValue = dataSet.int16('x00280107');
+  let maxPixelValue = metaData[DICOM_TAGS.MAX_PIXEL_VAL];
   if (!maxPixelValue) {
     maxPixelValue = pixelData[0];
     for (let i = 1; i < pixelData.length; i++) {
@@ -102,4 +122,4 @@ const loadImage = (imageId) => {
   };
 };
 
-export {loadImage};
+export {loadImage, setMetadata};
