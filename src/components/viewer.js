@@ -60,7 +60,7 @@ export default class Viewer extends React.Component {
   componentDidMount() {
     cornerstone.enable(this.canvasElement);
     this.canvasElement.addEventListener('cornerstoneimagerendered',
-        this.onImageRendered.bind(this));
+        () => this.onImageRendered());
     this.getInstances();
   }
 
@@ -157,7 +157,7 @@ export default class Viewer extends React.Component {
     this.dicomSequencer.maxSimultaneousRequests =
         this.state.maxSimultaneousRequests;
     this.dicomSequencer.setInstances(this.state.instances);
-    this.dicomSequencer.fetchInstances(this.onImageReady.bind(this));
+    this.dicomSequencer.fetchInstances((image) => this.onImageReady(image));
 
     // Set up an interval for updating metrics
     this.metricsIntervalId = setInterval(() => this.updateMetrics(), 100);
@@ -215,7 +215,7 @@ export default class Viewer extends React.Component {
             variant="contained"
             color="primary"
             disabled={this.state.instances.length == 0}
-            onClick={this.startDisplayingInstances.bind(this)}>
+            onClick={() => this.startDisplayingInstances()}>
               Start
           </Button>
           <Typography variant="h5">
