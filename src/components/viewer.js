@@ -29,8 +29,10 @@ export default class Viewer extends React.Component {
       readyImagesProgress: 0,
       numRenderedImages: 0,
       renderedImagesProgress: 0,
-      renderStartTime: 0,
       renderTimer: 0,
+      fetchTimer: 0,
+      totalTimer: 0,
+      timeToFirstImage: 0,
       maxSimultaneousRequests: 20,
     };
 
@@ -41,10 +43,15 @@ export default class Viewer extends React.Component {
         this.props.study,
         this.props.series,
     );
+
     this.readyImages = [];
+    this.readyImagesCount = 0;
     this.newSequence = false;
+    this.fetchStartTime = 0;
+    this.renderStartTime = 0,
     this.canvasElement;
     this.renderedImagesCount = 0;
+    this.metricsIntervalId = 0;
   }
 
   /**
@@ -70,18 +77,13 @@ export default class Viewer extends React.Component {
    */
   onImageReady(image) {
     this.readyImages.push(image);
+    this.readyImagesCount++;
+
     if (this.newSequence) {
       // If this is the first image in the sequence, render immediately
       this.displayNextImage();
       this.newSequence = false;
     }
-
-    // Update progress bar
-    this.setState((prevState) => ({
-      readyImagesProgress: this.readyImages.length /
-                          this.state.instances.length * 100,
-      numReadyImages: prevState.numReadyImages + 1,
-    }));
   }
 
   /**
@@ -89,13 +91,17 @@ export default class Viewer extends React.Component {
    */
   onImageRendered() {
     this.renderedImagesCount++;
-    this.setState({
-      renderedImagesProgress: this.renderedImagesCount /
-                              this.state.instances.length * 100,
-      renderTimer: Date.now() - this.state.renderStartTime,
-      numRenderedImages: this.renderedImagesCount,
-    });
-
+    if (this.renderedImagesCount == 1) {
+      this.renderStartTime = Date.now();
+      this.setState({
+        timeToFirstImage: Date.now() - this.fetchStartTime,
+      });
+    } else if (this.renderedImagesCount == this.state.instances.length) {
+      // When last image is rendered, stop the
+      // metrics interval and run one final time
+      clearInterval(this.metricsIntervalId);
+      this.updateMetrics();
+    }
     this.displayNextImage();
   }
 
@@ -112,25 +118,49 @@ export default class Viewer extends React.Component {
   }
 
   /**
+   * Updates the UI metrics for the currently running sequence
+   */
+  updateMetrics() {
+    // Update progress bar
+    this.setState({
+      readyImagesProgress: this.readyImages.length /
+                              this.state.instances.length * 100,
+      numReadyImages: this.readyImagesCount,
+      renderedImagesProgress: this.renderedImagesCount /
+                              this.state.instances.length * 100,
+      renderTimer: Date.now() - this.renderStartTime,
+      totalTimer: Date.now() - this.fetchStartTime,
+      numRenderedImages: this.renderedImagesCount,
+    });
+  }
+
+  /**
    * Resets variables and begins fetching dicom images in sequence
    */
   startDisplayingInstances() {
     this.newSequence = true;
     this.renderedImagesCount = 0;
     this.readyImages = [];
+    this.readyImagesCount = 0;
+    this.fetchStartTime = Date.now();
     this.setState({
-      renderStartTime: Date.now(),
       renderTimer: 0,
+      totalTimer: 0,
+      fetchTimer: 0,
       numReadyImages: 0,
       readyImagesProgress: 0,
       numRenderedImages: 0,
       renderedImagesProgress: 0,
+      timeToFirstImage: 0,
     });
 
     this.dicomSequencer.maxSimultaneousRequests =
         this.state.maxSimultaneousRequests;
     this.dicomSequencer.setInstances(this.state.instances);
     this.dicomSequencer.fetchInstances(this.onImageReady.bind(this));
+
+    // Set up an interval for updating metrics
+    this.metricsIntervalId = setInterval(() => this.updateMetrics(), 100);
   }
 
   /**
@@ -195,7 +225,16 @@ export default class Viewer extends React.Component {
             Frames Displayed: {this.state.numRenderedImages}
           </Typography>
           <Typography variant="h5">
-            Time: {this.state.renderTimer / 1000}s
+            Total Time: {(this.state.totalTimer / 1000).toFixed(2)}s
+          </Typography>
+          <Typography variant="h5">
+            Time to First Image: {
+              (this.state.timeToFirstImage / 1000).toFixed(2)
+            }s
+          </Typography>
+          <Typography variant="h5">
+            Average FPS: {(this.state.numRenderedImages /
+                        (this.state.renderTimer / 1000)).toFixed(2)}
           </Typography>
         </Box>
       </Paper>
