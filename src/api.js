@@ -191,6 +191,8 @@ const fetchInstances =
  * @return {Uint8Array} Byte array of DICOM P10 contents
  */
 const fetchDicomFile = async (url) => {
+  // TODO(#10) Revisit using gzip without multipart headers once fix is launched
+  // TODO(#11) Investigate optimal accept header for compressed instances
   const response = await authenticatedFetch(url, {
     headers: {
       'Accept': DICOM_CONTENT_TYPE,
