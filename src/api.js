@@ -176,10 +176,10 @@ const fetchSeries =
 const fetchInstances =
     async (projectId, location, dataset, dicomStore, studyId, seriesId) => {
   const data = await gapi.client.healthcare.projects.locations.datasets
-    .dicomStores.studies.searchForInstances({
+    .dicomStores.studies.series.searchForInstances({
       parent: `projects/${projectId}/locations/${location}/` +
       `datasets/${dataset}/dicomStores/${dicomStore}`,
-      dicomWebPath: `studies/${studyId}/instances`,
+      dicomWebPath: `studies/${studyId}/series/${seriesId}/instances`,
     });
 
   return data.result;

@@ -1,4 +1,5 @@
 import * as cornerstone from 'cornerstone-core';
+import {IMAGE_LOADER_PREFIX} from './config.js';
 
 /**
  * @callback onImageReady
