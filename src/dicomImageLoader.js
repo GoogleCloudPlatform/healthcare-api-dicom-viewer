@@ -2,6 +2,7 @@
 import * as api from './api.js';
 import * as dicomParser from 'dicom-parser';
 import {DCM_BOUNDARY_TOP_BYTE_LEN} from './dicomValues.js';
+import {IMAGE_LOADER_PREFIX} from './config.js';
 
 /**
  * Creates a cornerstone image object from a DICOM P10 file
@@ -82,7 +83,7 @@ const createImageObjectFromDicom = (imageId, dicomByteArray) => {
  * cornerstone
  */
 const loadImage = (imageId) => {
-  const url = imageId.replace('dicomImageLoader', 'https');
+  const url = imageId.replace(IMAGE_LOADER_PREFIX, 'https');
 
   const promise = new Promise((resolve, reject) => {
     api.fetchDicomFile(url)
