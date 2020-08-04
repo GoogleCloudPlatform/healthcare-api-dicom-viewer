@@ -74,7 +74,7 @@ api.fetchSeries.mockResolvedValue([{
   },
 }]);
 
-// fetchInstances will resolve 1 fake instance
+// fetchMetadata will resolve 1 fake instance
 api.fetchMetadata.mockResolvedValue([{
   '00080016': {
     vr: 'UI',

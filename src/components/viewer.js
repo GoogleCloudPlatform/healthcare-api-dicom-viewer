@@ -166,14 +166,15 @@ export default class Viewer extends React.Component {
   /**
    * Retrieves a list of dicom instances in this series
    */
-  async getInstances() {
+  getInstances() {
     this.getInstancesPromise = api.makeCancelable(
         api.fetchMetadata(
             this.props.project, this.props.location,
             this.props.dataset, this.props.dicomStore,
             this.props.study[DICOM_TAGS.STUDY_UID].Value[0],
             this.props.series[DICOM_TAGS.SERIES_UID].Value[0],
-        ));
+        ),
+    );
 
     this.getInstancesPromise.promise
         .then((instances) => {

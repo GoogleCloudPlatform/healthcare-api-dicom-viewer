@@ -90,7 +90,7 @@ const createImageObjectFromDicom = (imageId, pixelData) => {
     columnPixelSpacing: 1.0,
     rowPixelSpacing: 1.0,
     invert: invert,
-    sizeInBytes: width * height,
+    sizeInBytes: width * height * 2,
   };
 
   return image;
