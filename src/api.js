@@ -199,6 +199,9 @@ const fetchDicomFile = async (url) => {
     },
   });
 
+  // TODO - Either don't use multipart headers once gzip is enabled for
+  // non-multipart headers or search for the header boundary instead of using
+  // a constant value, as the length of the header could change and break this
   let arrayBuffer = await response.arrayBuffer();
   // Strip multipart boundary from response
   const startIndex = DCM_BOUNDARY_TOP_BYTE_LEN;
