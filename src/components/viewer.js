@@ -6,6 +6,7 @@ import {
 } from '@material-ui/core';
 import * as cornerstone from 'cornerstone-core';
 import * as api from '../api.js';
+import {DICOM_TAGS} from '../dicomValues.js';
 import DicomImageSequencer from '../dicomImageSequencer.js';
 
 /**
@@ -30,8 +31,11 @@ export default class Viewer extends React.Component {
       readyImagesProgress: 0,
       numRenderedImages: 0,
       renderedImagesProgress: 0,
+      renderTimer: 0,
+      fetchTimer: 0,
+      totalTimer: 0,
+      timeToFirstImage: 0,
       maxSimultaneousRequests: 20,
-      totalRenderTime: 0,
     };
 
     this.dicomSequencer = new DicomImageSequencer(
@@ -43,12 +47,14 @@ export default class Viewer extends React.Component {
         this.props.series,
     );
 
-    this.renderStartTime = 0,
     this.readyImages = [];
     this.readyImagesCount = 0;
     this.newSequence = false;
+    this.fetchStartTime = 0;
+    this.renderStartTime = 0,
     this.canvasElement;
     this.renderedImagesCount = 0;
+    this.metricsIntervalId = 0;
   }
 
   /**
@@ -57,7 +63,7 @@ export default class Viewer extends React.Component {
   componentDidMount() {
     cornerstone.enable(this.canvasElement);
     this.canvasElement.addEventListener('cornerstoneimagerendered',
-        this.onImageRendered.bind(this));
+        () => this.onImageRendered());
     this.getInstances();
   }
 
@@ -88,17 +94,17 @@ export default class Viewer extends React.Component {
    */
   onImageRendered() {
     this.renderedImagesCount++;
-
     if (this.renderedImagesCount == 1) {
       this.renderStartTime = Date.now();
-    } else if (this.renderedImagesCount == this.state.instances.length) {
       this.setState({
-        totalRenderTime: Date.now() - this.renderStartTime,
-        numReadyImages: this.readyImagesCount,
-        numRenderedImages: this.numRenderedImages,
+        timeToFirstImage: Date.now() - this.fetchStartTime,
       });
+    } else if (this.renderedImagesCount == this.state.instances.length) {
+      // When last image is rendered, stop the
+      // metrics interval and run one final time
+      clearInterval(this.metricsIntervalId);
+      this.updateMetrics();
     }
-
     this.displayNextImage();
   }
 
@@ -110,9 +116,25 @@ export default class Viewer extends React.Component {
       const image = this.readyImages.shift();
       cornerstone.displayImage(this.canvasElement, image);
     } else {
-      console.log('Waiting on next image');
       this.newSequence = true;
     }
+  }
+
+  /**
+   * Updates the UI metrics for the currently running sequence
+   */
+  updateMetrics() {
+    // Update progress bar
+    this.setState({
+      readyImagesProgress: this.readyImages.length /
+                              this.state.instances.length * 100,
+      numReadyImages: this.readyImagesCount,
+      renderedImagesProgress: this.renderedImagesCount /
+                              this.state.instances.length * 100,
+      renderTimer: Date.now() - this.renderStartTime,
+      totalTimer: Date.now() - this.fetchStartTime,
+      numRenderedImages: this.renderedImagesCount,
+    });
   }
 
   /**
@@ -123,30 +145,39 @@ export default class Viewer extends React.Component {
     this.renderedImagesCount = 0;
     this.readyImages = [];
     this.readyImagesCount = 0;
+    this.fetchStartTime = Date.now();
     this.setState({
+      renderTimer: 0,
+      totalTimer: 0,
+      fetchTimer: 0,
       numReadyImages: 0,
       readyImagesProgress: 0,
       numRenderedImages: 0,
       renderedImagesProgress: 0,
+      timeToFirstImage: 0,
     });
 
     this.dicomSequencer.maxSimultaneousRequests =
       this.state.maxSimultaneousRequests;
     this.dicomSequencer.setInstances(this.state.instances);
-    this.dicomSequencer.fetchInstances(this.onImageReady.bind(this));
+    this.dicomSequencer.fetchInstances((image) => this.onImageReady(image));
+
+    // Set up an interval for updating metrics
+    this.metricsIntervalId = setInterval(() => this.updateMetrics(), 100);
   }
 
   /**
    * Retrieves a list of dicom instances in this series
    */
-  async getInstances() {
+  getInstances() {
     this.getInstancesPromise = api.makeCancelable(
-        api.fetchInstances(
+        api.fetchMetadata(
             this.props.project, this.props.location,
             this.props.dataset, this.props.dicomStore,
-            this.props.study['0020000D'].Value[0],
-            this.props.series['0020000E'].Value[0],
-        ));
+            this.props.study[DICOM_TAGS.STUDY_UID].Value[0],
+            this.props.series[DICOM_TAGS.SERIES_UID].Value[0],
+        ),
+    );
 
     this.getInstancesPromise.promise
         .then((instances) => {
@@ -188,8 +219,8 @@ export default class Viewer extends React.Component {
             variant="contained"
             color="primary"
             disabled={this.state.instances.length == 0}
-            onClick={this.startDisplayingInstances.bind(this)}>
-            Start
+            onClick={() => this.startDisplayingInstances()}>
+              Start
           </Button>
           <Typography variant="h5">
             Frames Loaded: {this.state.numReadyImages}
@@ -197,15 +228,18 @@ export default class Viewer extends React.Component {
           <Typography variant="h5">
             Frames Displayed: {this.state.numRenderedImages}
           </Typography>
-          {this.state.totalRenderTime > 0 ?
-            <Typography variant="h5">
-              Time: {this.state.totalRenderTime / 1000}s
-            </Typography> : null}
-          {this.state.totalRenderTime > 0 ?
-            <Typography variant="h5">
-              Average FPS: {this.state.instances.length /
-                          (this.state.totalRenderTime / 1000)}
-            </Typography> : null}
+          <Typography variant="h5">
+            Total Time: {(this.state.totalTimer / 1000).toFixed(2)}s
+          </Typography>
+          <Typography variant="h5">
+            Time to First Image: {
+              (this.state.timeToFirstImage / 1000).toFixed(2)
+            }s
+          </Typography>
+          <Typography variant="h5">
+            Average FPS: {(this.state.numRenderedImages /
+                        (this.state.renderTimer / 1000)).toFixed(2)}
+          </Typography>
         </Box>
       </Paper>
     );

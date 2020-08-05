@@ -3,10 +3,10 @@ import createImageObjectFromDicom from '../createImageObject.js';
 
 const fetchDicom = (url) => {
   api.fetchDicomFile(url)
-      .then((byteArray) => {
+      .then((pixelData) => {
         self.postMessage({
           task: 'fetchDicom',
-          byteArray,
+          pixelData,
           url,
         });
       })
@@ -19,9 +19,8 @@ const fetchDicom = (url) => {
       });
 };
 
-const createImage = (imageId, byteArray) => {
-  const image = createImageObjectFromDicom(imageId, byteArray);
-  const pixelData = image.getPixelData();
+const createImage = (imageId, pixelData, metaData) => {
+  const image = createImageObjectFromDicom(imageId, pixelData, metaData);
   delete image.getPixelData;
   self.postMessage({
     task: 'createImage',
@@ -42,7 +41,11 @@ self.addEventListener('message', (event) => {
         fetchDicom(event.data.url);
         break;
       case 'createImage':
-        createImage(event.data.imageId, event.data.byteArray);
+        createImage(
+            event.data.imageId,
+            event.data.pixelData,
+            event.data.metaData,
+        );
         break;
       default:
         console.error('Invalid dicomworker event ' + event.data.action);

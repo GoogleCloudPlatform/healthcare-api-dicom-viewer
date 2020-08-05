@@ -1,5 +1,10 @@
 /** @module api */
 import Auth from './auth.js';
+import {
+  DICOM_CONTENT_TYPE,
+  DCM_BOUNDARY_TOP_BYTE_LEN,
+  DCM_BOUNDARY_BOTTOM_BYTE_LEN,
+} from './dicomValues.js';
 
 /**
  * Fetches a url using a stored access token, signing the user in
@@ -45,9 +50,6 @@ const authenticatedFetch = async (input, init) => {
   }
 };
 
-// TODO: Add ability to filter by search query, to
-//       later implement with navigation views
-// https://github.com/GoogleCloudPlatform/healthcare-api-dicom-viewer/issues/6
 /**
  * Fetches one page of user's google cloud project ids
  * @param {string=} searchQuery Optional search query to filter project ids
@@ -58,6 +60,9 @@ const fetchProjects = async (searchQuery) => {
   if (searchQuery) {
     request.filter = `id:${searchQuery}*`;
   }
+  // Only fetch one page to avoid taking too long to load. User will
+  // most likely not scroll through more than a page of projects, so search
+  // query is used to find specific projects
   const data = await gapi.client.cloudresourcemanager.projects.list(request);
 
   return data.result.projects.map((project) => project.projectId);
@@ -129,7 +134,7 @@ const fetchStudies =
   const data = await gapi.client.healthcare.projects.locations.datasets
       .dicomStores.searchForStudies({
         parent: `projects/${projectId}/locations/${location}/` +
-    `datasets/${dataset}/dicomStores/${dicomStore}`,
+        `datasets/${dataset}/dicomStores/${dicomStore}`,
         dicomWebPath: 'studies',
       });
 
@@ -150,7 +155,7 @@ const fetchSeries =
   const data = await gapi.client.healthcare.projects.locations.datasets
       .dicomStores.studies.searchForSeries({
         parent: `projects/${projectId}/locations/${location}/` +
-    `datasets/${dataset}/dicomStores/${dicomStore}`,
+        `datasets/${dataset}/dicomStores/${dicomStore}`,
         dicomWebPath: `studies/${studyId}/series`,
       });
 
@@ -158,24 +163,24 @@ const fetchSeries =
 };
 
 /**
- * Fetches a list of instances in a given
- *    series
+ * Fetches a list of metadata for all instances in a given
+ *    project/location/dataset/dicomStore/study/series
  * @param {string} projectId Project ID
  * @param {string} location Location
  * @param {string} dataset Dataset
  * @param {string} dicomStore Dicom Store
  * @param {string} studyId Study UID
  * @param {string} seriesId Series UID
- * @return {Promise<Object[]>} List of instances in the series
+ * @return {Promise<Object<string, Object>[]>} List of metadata for all instances in the series
  */
-const fetchInstances =
+const fetchMetadata =
     async (projectId, location, dataset, dicomStore, studyId, seriesId) => {
   const data = await gapi.client.healthcare.projects.locations.datasets
-    .dicomStores.studies.searchForInstances({
-      parent: `projects/${projectId}/locations/${location}/` +
-      `datasets/${dataset}/dicomStores/${dicomStore}`,
-      dicomWebPath: `studies/${studyId}/instances`,
-    });
+      .dicomStores.studies.series.retrieveMetadata({
+        parent: `projects/${projectId}/locations/${location}/` +
+        `datasets/${dataset}/dicomStores/${dicomStore}`,
+        dicomWebPath: `studies/${studyId}/series/${seriesId}/metadata`,
+      });
 
   return data.result;
 };
@@ -183,21 +188,27 @@ const fetchInstances =
 /**
  * Fetches a dicom file from a given url using Google Authentication
  * @param {string} url Url for the dicom file
- * @return {Uint8Array} Byte array of DICOM P10 contents
+ * @return {Int16Array} Pixel data of DICOM P10 contents
  */
 const fetchDicomFile = async (url) => {
+  // TODO(#10) Revisit using gzip without multipart headers once fix is launched
+  // TODO(#11) Investigate optimal accept header for compressed instances
   const response = await authenticatedFetch(url, {
     headers: {
-      'Accept': 'multipart/related;' +
-                'type="application/dicom";' +
-                'transfer-syntax=1.2.840.10008.1.2.1',
+      'Accept': DICOM_CONTENT_TYPE,
     },
   });
 
+  // TODO - Either don't use multipart headers once gzip is enabled for
+  // non-multipart headers or search for the header boundary instead of using
+  // a constant value, as the length of the header could change and break this
   let arrayBuffer = await response.arrayBuffer();
-  // Strip multipart header from arrayBuffer
-  arrayBuffer = arrayBuffer.slice(136, arrayBuffer.byteLength - 68);
-  return new Uint8Array(arrayBuffer);
+  // Strip multipart boundary from response
+  const startIndex = DCM_BOUNDARY_TOP_BYTE_LEN;
+  const endIndex = arrayBuffer.byteLength - DCM_BOUNDARY_BOTTOM_BYTE_LEN;
+  arrayBuffer = arrayBuffer.slice(startIndex, endIndex);
+
+  return new Int16Array(arrayBuffer);
 };
 
 /**
@@ -233,7 +244,14 @@ const makeCancelable = (promise) => {
 };
 
 export {
-  authenticatedFetch, fetchProjects, fetchLocations, fetchDatasets,
-  fetchDicomStores, fetchStudies, fetchSeries, fetchInstances, fetchDicomFile,
+  authenticatedFetch,
+  fetchProjects,
+  fetchLocations,
+  fetchDatasets,
+  fetchDicomStores,
+  fetchStudies,
+  fetchSeries,
+  fetchMetadata,
+  fetchDicomFile,
   makeCancelable,
 };

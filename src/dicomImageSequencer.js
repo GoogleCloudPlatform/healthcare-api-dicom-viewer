@@ -1,5 +1,7 @@
 import * as cornerstone from 'cornerstone-core';
 import * as dicomImageLoader from './dicomImageLoader/dicomImageLoader.js';
+import {IMAGE_LOADER_PREFIX} from './config.js';
+import {DICOM_TAGS} from './dicomValues.js';
 
 /**
  * @callback onImageReady
@@ -42,8 +44,11 @@ export default class DicomImageSequencer {
    */
   setInstances(instances) {
     this.instances = instances;
+
+    // Sort instances to ensure correct order of rendering
     this.instances.sort((a, b) => {
-      return a['00200013'].Value[0] - b['00200013'].Value[0];
+      return a[DICOM_TAGS.INSTANCE_NUMBER].Value[0] -
+          b[DICOM_TAGS.INSTANCE_NUMBER].Value[0];
     });
   }
 
@@ -55,9 +60,12 @@ export default class DicomImageSequencer {
   fetchInstances(onImageReady) {
     for (const instance of this.instances) {
       // Add fetches and instances to respective queues
-      const imageURL = `dicomImageLoader://healthcare.googleapis.com/v1/projects/${this.project}/locations/${this.location}/datasets/${this.dataset}/dicomStores/${this.dicomStore}/dicomWeb/studies/${this.study['0020000D'].Value[0]}/series/${this.series['0020000E'].Value[0]}/instances/${instance['00080018'].Value[0]}`;
+      const imageURL = `${IMAGE_LOADER_PREFIX}://healthcare.googleapis.com/v1/projects/${this.project}/locations/${this.location}/datasets/${this.dataset}/dicomStores/${this.dicomStore}/dicomWeb/studies/${this.study[DICOM_TAGS.STUDY_UID].Value[0]}/series/${this.series[DICOM_TAGS.SERIES_UID].Value[0]}/instances/${instance[DICOM_TAGS.INSTANCE_UID].Value[0]}`;
       this.instanceQueue.push(imageURL);
       this.fetchQueue.push(imageURL);
+
+      // Store metaData in dicomImageLoader to be used for creating image object
+      dicomImageLoader.setMetadata(imageURL, instance);
     }
 
     // Check fetch queue after image loader finishes

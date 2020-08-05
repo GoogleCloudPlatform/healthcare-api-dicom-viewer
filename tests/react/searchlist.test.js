@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import React from 'react';
 import {render, fireEvent, screen, waitFor} from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
@@ -5,7 +6,7 @@ import SearchList from '../../src/components/searchlist.js';
 
 /**
  * Helper function -
- * Returns an array of items labeled as so: item1, item2...
+ *    Returns an array of items labeled as so: item1, item2...
  * @param {number} numItems Number of items to generate
  * @return {string[]} List of numbered items
  */
@@ -52,7 +53,8 @@ test('Only first 50 items are displayed until user scrolls', () => {
 
 test('onClickItem callback returns item3 when item3 is clicked', (done) => {
   const items = generateItems(5);
-  const onClickItem = (item) => {
+  const onClickItem = (index) => {
+    const item = items[index];
     expect(item).toBe('item3');
     done();
   };

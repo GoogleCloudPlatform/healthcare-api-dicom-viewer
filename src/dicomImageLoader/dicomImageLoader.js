@@ -2,6 +2,7 @@
 import * as api from '../api.js';
 import createImageObjectFromDicom from './createImageObject.js';
 import DicomWorkerManager from './webworkers/dicomWorkerManager.js';
+import {IMAGE_LOADER_PREFIX} from '../config.js';
 
 const defaultConfig = {
   useWebworkersToFetch: false,
@@ -39,7 +40,7 @@ const onFetch = (onFetch) => {
  * cornerstone
  */
 const loadImage = (imageId) => {
-  const url = imageId.replace('dicomImageLoader', 'https');
+  const url = imageId.replace(IMAGE_LOADER_PREFIX, 'https');
 
   const promise = new Promise((resolve, reject) => {
     // Promise for fetching dicom file from url
@@ -52,16 +53,16 @@ const loadImage = (imageId) => {
       fetchDicomPromise = api.fetchDicomFile(url);
     }
 
-    fetchDicomPromise.then((byteArray) => {
+    fetchDicomPromise.then((pixelData) => {
       onImageFetch();
 
       // Create cornerstone image object with or without webworkers
       if (config.useWebworkersToParse) {
-        workerManager.createImage(imageId, byteArray).then((image) => {
+        workerManager.createImage(imageId, pixelData).then((image) => {
           resolve(image);
         }).catch((error) => reject(error));
       } else {
-        const image = createImageObjectFromDicom(imageId, byteArray);
+        const image = createImageObjectFromDicom(imageId, pixelData);
         resolve(image);
       }
     }).catch((error) => reject(error));
@@ -74,3 +75,4 @@ const loadImage = (imageId) => {
 };
 
 export {loadImage, configure, createImageObjectFromDicom, onFetch};
+export {setMetadata} from './createImageObject.js';

@@ -1,5 +1,6 @@
 import WorkerLinkedList from './workerLinkedList.js';
 import Auth from '../../auth.js';
+import {metaDataDict} from '../createImageObject';
 
 /**
  * Class for managing webworkers to perform tasks related to dicom
@@ -82,10 +83,10 @@ class DicomWorkerManager {
    * Uses a worker to parse a dicom file and create an image
    * object
    * @param {string} imageId ImageID for this dicom image
-   * @param {Uint8Array} byteArray Byte array of dicom file contents
+   * @param {Int16Array} pixelData Pixel data of dicom file
    * @return {Promise<Object>} Cornerstone image object
    */
-  createImage(imageId, byteArray) {
+  createImage(imageId, pixelData) {
     return new Promise((resolve, reject) => {
       const worker = this.getNextWorker();
 
@@ -98,8 +99,9 @@ class DicomWorkerManager {
       // Instruct worker to complete createImage task
       worker.worker.postMessage({
         task: 'createImage',
-        byteArray,
+        pixelData,
         imageId,
+        metaData: metaDataDict[imageId],
       });
       this.workers.incrementTasks(worker);
     });
@@ -118,7 +120,7 @@ class DicomWorkerManager {
       return;
     }
 
-    fetchDicomTask.resolve(data.byteArray);
+    fetchDicomTask.resolve(data.pixelData);
   }
 
   /**
