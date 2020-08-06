@@ -1,6 +1,17 @@
 import React, {useState, useEffect} from 'react';
 import {makeStyles} from '@material-ui/core/styles';
-import {Typography, Breadcrumbs, Link, Box} from '@material-ui/core';
+import {
+  Typography,
+  Breadcrumbs,
+  Link,
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+} from '@material-ui/core';
 import Auth from '../auth.js';
 import * as api from '../api.js';
 import {DICOM_TAGS} from '../dicomValues.js';
@@ -23,6 +34,8 @@ export default function Main() {
 
   // Declare state variables
   const [, setIsSignedIn] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
 
   /**
    * @typedef {Object} NavigationState
@@ -102,6 +115,12 @@ export default function Main() {
       setData(data);
     } catch (err) {
       console.error(err);
+      if (err.result) {
+        setErrorMessage(err.result.error.message);
+      } else {
+        setErrorMessage(err.toString());
+      }
+      setErrorModalOpen(true);
     } finally {
       setLoading(false);
     }
@@ -350,6 +369,24 @@ export default function Main() {
           dicomStore={dicomStores.selected}
           study={studies.selected}
           series={series.selected} /> : null}
+      <Dialog
+        open={errorModalOpen}
+        onClose={() => setErrorModalOpen(false)}
+        aria-labelledby="error-dialog-title"
+        aria-describedby="error-dialog-description"
+      >
+        <DialogTitle id="error-dialog-title">Error</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="error-dialog-description">
+            {errorMessage}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setErrorModalOpen(false)} color="primary" autoFocus>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div >
   );
 }
