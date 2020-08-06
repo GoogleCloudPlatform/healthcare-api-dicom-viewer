@@ -1,6 +1,12 @@
-import WorkerLinkedList from './workerLinkedList.js';
+import DicomWorker from './dicom.worker.js';
 import Auth from '../../auth.js';
 import {metaDataDict} from '../createImageObject';
+
+/**
+ * @typedef {Object} Worker
+ * @property {DicomWorker} worker
+ * @property {number} activeTasks
+ */
 
 /**
  * Class for managing webworkers to perform tasks related to dicom
@@ -10,10 +16,11 @@ class DicomWorkerManager {
   /**
    * Creates a new DicomWorkerManager
    * @param {number=} numWorkers Number of webworkers to use.
-   * Defaults to number of logical processors in computer
+   *    Defaults to number of logical processors in computer
    */
   constructor(numWorkers) {
-    this.workers = new WorkerLinkedList();
+    /** @type {Worker[]} */
+    this.workers = [];
     this.fetchDicomTasks = {};
     this.createImageTasks = {};
 
@@ -23,11 +30,15 @@ class DicomWorkerManager {
 
     // Initialize workers
     for (let i = 0; i < numWorkers; i++) {
-      const newWorker = this.workers.addNewWorker();
+      const newWorker = {
+        worker: new DicomWorker(),
+        activeTasks: 0,
+      };
       newWorker.worker.onmessage = (event) => {
         this.onWorkerMessage(event);
-        this.workers.decrementTasks(newWorker);
+        newWorker.activeTasks--;
       };
+      this.workers.push(newWorker);
     }
   }
 
@@ -48,10 +59,19 @@ class DicomWorkerManager {
 
   /**
    * Returns the worker with the least amount of active tasks
-   * @return {Object} worker object
+   * @return {Worker} worker object
    */
   getNextWorker() {
-    return this.workers.head;
+    let nextWorker = this.workers[0];
+    if (nextWorker.activeTasks == 0) return nextWorker;
+    for (let i = 1; i < this.workers.length; i++) {
+      if (this.workers[i].activeTasks < nextWorker.activeTasks) {
+        nextWorker = this.workers[i];
+        if (nextWorker.activeTasks == 0) return nextWorker;
+      }
+    }
+
+    return nextWorker;
   }
 
   /**
@@ -75,7 +95,7 @@ class DicomWorkerManager {
         url,
         accessToken: Auth.getAccessToken(),
       });
-      this.workers.incrementTasks(worker);
+      worker.activeTasks++;
     });
   }
 
@@ -103,7 +123,7 @@ class DicomWorkerManager {
         imageId,
         metaData: metaDataDict[imageId],
       });
-      this.workers.incrementTasks(worker);
+      worker.activeTasks++;
     });
   }
 

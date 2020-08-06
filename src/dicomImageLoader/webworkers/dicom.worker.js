@@ -21,6 +21,8 @@ const fetchDicom = (url) => {
 
 const createImage = (imageId, pixelData, metaData) => {
   const image = createImageObjectFromDicom(imageId, pixelData, metaData);
+  // Functions cannot be transferred, so delete getPixelData and add it back on
+  // the main thread
   delete image.getPixelData;
   self.postMessage({
     task: 'createImage',
@@ -35,6 +37,7 @@ self.addEventListener('message', (event) => {
     self.accessToken = event.data.accessToken;
   }
 
+  // Call the function corresponding to the given task
   if (event.data.task) {
     switch (event.data.task) {
       case 'fetchDicom':
