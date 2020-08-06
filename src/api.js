@@ -1,10 +1,7 @@
 /** @module api */
 import Auth from './auth.js';
-import {
-  DICOM_CONTENT_TYPE,
-  DCM_BOUNDARY_TOP_BYTE_LEN,
-  DCM_BOUNDARY_BOTTOM_BYTE_LEN,
-} from './dicomValues.js';
+import {DICOM_CONTENT_TYPE} from './dicomValues.js';
+import parseMultipart from './parseMultipart.js';
 
 /**
  * Fetches a url using a stored access token, signing the user in
@@ -199,14 +196,12 @@ const fetchDicomFile = async (url) => {
     },
   });
 
-  // TODO - Either don't use multipart headers once gzip is enabled for
-  // non-multipart headers or search for the header boundary instead of using
-  // a constant value, as the length of the header could change and break this
-  let arrayBuffer = await response.arrayBuffer();
-  // Strip multipart boundary from response
-  const startIndex = DCM_BOUNDARY_TOP_BYTE_LEN;
-  const endIndex = arrayBuffer.byteLength - DCM_BOUNDARY_BOTTOM_BYTE_LEN;
-  arrayBuffer = arrayBuffer.slice(startIndex, endIndex);
+  // Get the content-type header to find the boundary string
+  const contentTypeHeader = response.headers.get('content-type');
+  // Parse the contentTypeHeader and remove the "boundary=" prefix
+  const boundary = contentTypeHeader.split(';')[1].substring(10);
+  // Parse multipart header and boundary from arrayBuffer
+  const arrayBuffer = parseMultipart(await response.arrayBuffer(), boundary);
 
   return new Int16Array(arrayBuffer);
 };
