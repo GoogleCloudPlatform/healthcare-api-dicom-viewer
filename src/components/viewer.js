@@ -1,13 +1,15 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {
-  Paper, Box, LinearProgress, Typography,
-  TextField, Button,
+  Box, LinearProgress, Typography,
+  TextField, Button, Checkbox,
+  FormControlLabel,
 } from '@material-ui/core';
 import * as cornerstone from 'cornerstone-core';
 import * as api from '../api.js';
 import {DICOM_TAGS} from '../dicomValues.js';
 import DicomImageSequencer from '../dicomImageSequencer.js';
+import * as dicomImageLoader from '../dicomImageLoader/dicomImageLoader.js';
 
 /**
  * React Component for viewing medical images
@@ -36,6 +38,9 @@ export default class Viewer extends React.Component {
       totalTimer: 0,
       timeToFirstImage: 0,
       maxSimultaneousRequests: 20,
+      useWebworkersToFetch: true,
+      useWebworkersToParse: true,
+      isDisplaying: false,
     };
 
     this.dicomSequencer = new DicomImageSequencer(
@@ -65,6 +70,10 @@ export default class Viewer extends React.Component {
     this.canvasElement.addEventListener('cornerstoneimagerendered',
         () => this.onImageRendered());
     this.getInstances();
+    dicomImageLoader.configure({
+      useWebworkersToFetch: this.state.useWebworkersToFetch,
+      useWebworkersToParse: this.state.useWebworkersToParse,
+    });
   }
 
   /**
@@ -104,6 +113,10 @@ export default class Viewer extends React.Component {
       // metrics interval and run one final time
       clearInterval(this.metricsIntervalId);
       this.updateMetrics();
+
+      this.setState({
+        isDisplaying: false,
+      });
     }
     this.displayNextImage();
   }
@@ -155,10 +168,14 @@ export default class Viewer extends React.Component {
       numRenderedImages: 0,
       renderedImagesProgress: 0,
       timeToFirstImage: 0,
+      isDisplaying: true,
     });
 
+    // Purge cornerstone cache
+    cornerstone.imageCache.purgeCache();
+
     this.dicomSequencer.maxSimultaneousRequests =
-      this.state.maxSimultaneousRequests;
+        this.state.maxSimultaneousRequests;
     this.dicomSequencer.setInstances(this.state.instances);
     this.dicomSequencer.fetchInstances((image) => this.onImageReady(image));
 
@@ -193,35 +210,93 @@ export default class Viewer extends React.Component {
   }
 
   /**
+   * Fired when checkbox is changed for using fetch webworkers
+   * @param {React.ChangeEvent<HTMLInputElement>} event Event object
+   */
+  handleWebworkerFetchChecked(event) {
+    this.setState({
+      useWebworkersToFetch: event.target.checked,
+    });
+
+    dicomImageLoader.configure({
+      useWebworkersToFetch: event.target.checked,
+    });
+  }
+
+  /**
+   * Fired when checkbox is changed for using parse webworkers
+   * @param {React.ChangeEvent<HTMLInputElement>} event Event object
+   */
+  handleWebworkerParseChecked(event) {
+    this.setState({
+      useWebworkersToParse: event.target.checked,
+    });
+
+    dicomImageLoader.configure({
+      useWebworkersToParse: event.target.checked,
+    });
+  }
+
+  /**
    * Renders the component
    * @return {ReactComponent} <Viewer/>
    */
   render() {
     return (
-      <Paper>
-        <Box p={2}>
+      <Box p={2} display="flex" flexWrap="wrap">
+        <Box mr={2}>
           <div id="cornerstone-div"
             ref={(input) => {
               this.canvasElement = input;
             }}
-            style={{width: 500, height: 500}}>
+            style={{
+              width: 500,
+              height: 500,
+              background: 'black',
+            }}
+          >
             <canvas className="cornerstone-canvas"></canvas>
           </div>
           <LinearProgress variant="buffer"
             value={this.state.renderedImagesProgress}
-            valueBuffer={this.state.readyImagesProgress} />
-          <TextField label="Max Simultaneous Requests"
+            valueBuffer={this.state.readyImagesProgress} /><br/>
+          <TextField
+            label="Max Simultaneous Requests"
+            style={{width: 250}}
             defaultValue={this.state.maxSimultaneousRequests}
             onChange={(e) => {
               this.setState({maxSimultaneousRequests: Number(e.target.value)});
-            }} />
+            }} /><br/><br/>
           <Button
             variant="contained"
             color="primary"
-            disabled={this.state.instances.length == 0}
+            disabled={this.state.instances.length == 0 ||
+                this.state.isDisplaying}
             onClick={() => this.startDisplayingInstances()}>
               Start
-          </Button>
+          </Button><br/><br/>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={this.state.useWebworkersToFetch}
+                onChange={(e) => this.handleWebworkerFetchChecked(e)}
+                color="primary"
+              />
+            }
+            label="Use Webworkers to Fetch"
+          /><br/>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={this.state.useWebworkersToParse}
+                onChange={(e) => this.handleWebworkerParseChecked(e)}
+                color="primary"
+              />
+            }
+            label="Use Webworkers to Parse"
+          />
+        </Box>
+        <Box>
           <Typography variant="h5">
             Frames Loaded: {this.state.numReadyImages}
           </Typography>
@@ -241,7 +316,7 @@ export default class Viewer extends React.Component {
                         (this.state.renderTimer / 1000)).toFixed(2)}
           </Typography>
         </Box>
-      </Paper>
+      </Box>
     );
   }
 }

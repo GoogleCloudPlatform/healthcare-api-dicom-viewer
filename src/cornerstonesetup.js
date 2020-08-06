@@ -6,8 +6,3 @@ cornerstone.registerImageLoader(
     IMAGE_LOADER_PREFIX,
     dicomImageLoader.loadImage,
 );
-
-dicomImageLoader.configure({
-  useWebworkersToFetch: true,
-  useWebworkersToParse: true,
-});
