@@ -5,14 +5,6 @@ const DICOM_CONTENT_TYPE = 'multipart/related;' +
     'type="application/octet-stream";' +
     'transfer-syntax=1.2.840.10008.1.2.1';
 
-/** Byte length of the top boundary for multipart content types
- * @constant {number} */
-const DCM_BOUNDARY_TOP_BYTE_LEN = 143;
-
-/** Byte length of the bottom boundary for multipart content types
- * @constant {number} */
-const DCM_BOUNDARY_BOTTOM_BYTE_LEN = 68;
-
 const DICOM_TAGS = {
   STUDY_UID: '0020000D',
   SERIES_UID: '0020000E',
@@ -29,7 +21,5 @@ const DICOM_TAGS = {
 
 export {
   DICOM_CONTENT_TYPE,
-  DCM_BOUNDARY_TOP_BYTE_LEN,
-  DCM_BOUNDARY_BOTTOM_BYTE_LEN,
   DICOM_TAGS,
 };
