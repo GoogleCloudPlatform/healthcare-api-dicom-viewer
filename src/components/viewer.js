@@ -266,15 +266,7 @@ export default class Viewer extends React.Component {
             defaultValue={this.state.maxSimultaneousRequests}
             onChange={(e) => {
               this.setState({maxSimultaneousRequests: Number(e.target.value)});
-            }} /><br/><br/>
-          <Button
-            variant="contained"
-            color="primary"
-            disabled={this.state.instances.length == 0 ||
-                this.state.isDisplaying}
-            onClick={() => this.startDisplayingInstances()}>
-              Start
-          </Button><br/><br/>
+            }} /><br/>
           <FormControlLabel
             control={
               <Checkbox
@@ -294,7 +286,15 @@ export default class Viewer extends React.Component {
               />
             }
             label="Use Webworkers to Parse"
-          />
+          /><br/>
+          <Button
+            variant="contained"
+            color="primary"
+            disabled={this.state.instances.length == 0 ||
+                this.state.isDisplaying}
+            onClick={() => this.startDisplayingInstances()}>
+              Start
+          </Button>
         </Box>
         <Box>
           <Typography variant="h5">
