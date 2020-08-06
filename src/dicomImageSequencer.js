@@ -83,6 +83,7 @@ export default class DicomImageSequencer {
       if (this.loadedImages.hasOwnProperty(nextImage)) {
         onImageReady(this.loadedImages[nextImage]);
         this.instanceQueue.shift();
+        delete this.loadedImages[nextImage];
       } else {
         // If an instance in the queue is not ready, stop iterating
         return;
