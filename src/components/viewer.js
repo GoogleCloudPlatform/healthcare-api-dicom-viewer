@@ -123,7 +123,7 @@ export default class Viewer extends React.Component {
   updateMetrics() {
     // Update progress bar
     this.setState({
-      readyImagesProgress: this.readyImages.length /
+      readyImagesProgress: this.readyImagesCount /
                               this.state.instances.length * 100,
       numReadyImages: this.readyImagesCount,
       renderedImagesProgress: this.renderedImagesCount /
@@ -159,7 +159,7 @@ export default class Viewer extends React.Component {
     this.dicomSequencer.setInstances(this.state.instances);
     this.dicomSequencer.fetchInstances((image) => this.onImageReady(image));
 
-    // Set up an interval for updating metrics
+    // Set up an interval for updating metrics (10 times per second)
     this.metricsIntervalId = setInterval(() => this.updateMetrics(), 100);
   }
 
