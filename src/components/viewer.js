@@ -179,8 +179,8 @@ export default class Viewer extends React.Component {
     this.dicomSequencer.setInstances(this.state.instances);
     this.dicomSequencer.fetchInstances((image) => this.onImageReady(image));
 
-    // Set up an interval for updating metrics (10 times per second)
-    this.metricsIntervalId = setInterval(() => this.updateMetrics(), 100);
+    // Set up an interval for updating metrics (20 times per second)
+    this.metricsIntervalId = setInterval(() => this.updateMetrics(), 50);
   }
 
   /**
@@ -220,6 +220,7 @@ export default class Viewer extends React.Component {
 
     dicomImageLoader.configure({
       useWebworkersToFetch: event.target.checked,
+      useWebworkersToParse: this.state.useWebworkersToParse,
     });
   }
 
@@ -234,6 +235,7 @@ export default class Viewer extends React.Component {
 
     dicomImageLoader.configure({
       useWebworkersToParse: event.target.checked,
+      useWebworkersToFetch: this.state.useWebworkersToFetch,
     });
   }
 
