@@ -180,7 +180,7 @@ const fetchSeries =
  * @param {string} dicomStore Dicom Store
  * @param {string} studyId Study UID
  * @param {string} seriesId Series UID
- * @return {Promise<Object<string, Object>[]>} List of metadata for all instances in the series
+ * @return {Promise<Array<Object<string, Object>>>} List of metadata for all instances in the series
  */
 const fetchMetadata =
     async (projectId, location, dataset, dicomStore, studyId, seriesId) => {
