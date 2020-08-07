@@ -78,6 +78,9 @@ export default function SearchList({
     };
   }, []);
 
+  /**
+   * Runs when user scrolls page
+   */
   const onScroll = () => {
     // Check if search list bottom is visible on page
     const searchList = document.getElementById('search-list');

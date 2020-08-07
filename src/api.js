@@ -1,20 +1,40 @@
 /** @module api */
 import Auth from './auth.js';
+import {
+  DICOM_CONTENT_TYPE,
+  DCM_BOUNDARY_TOP_BYTE_LEN,
+  DCM_BOUNDARY_BOTTOM_BYTE_LEN,
+} from './dicomValues.js';
 
 /**
  * Fetches a url using a stored access token, signing the user in
  * if no access token exists
- * @param {string} url The url to fetch
+ * @param {RequestInfo} input The request info to fetch
+ * @param {RequestInit=} init The request init object
  * @return {Promise<Response>} Fetch response object
  */
-const authenticatedFetch = async (url) => {
+const authenticatedFetch = async (input, init) => {
   const accessToken = Auth.getAccessToken();
   if (accessToken) {
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
-    });
+    if (init) {
+      // Add authorization headers to given init object
+      if (init.headers) {
+        init.headers['Authorization'] = `Bearer ${accessToken}`;
+      } else {
+        init.headers = {
+          'Authorization': `Bearer ${accessToken}`,
+        };
+      }
+    } else {
+      // Initialize init object if none was given
+      init = {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      };
+    }
+
+    const response = await fetch(input, init);
 
     if (!response.ok) {
       if (response.status == 401) {
@@ -142,5 +162,96 @@ const fetchSeries =
   return data.result;
 };
 
-export {fetchProjects, fetchLocations, fetchDatasets, fetchDicomStores,
-  fetchStudies, fetchSeries};
+/**
+ * Fetches a list of metadata for all instances in a given
+ *    project/location/dataset/dicomStore/study/series
+ * @param {string} projectId Project ID
+ * @param {string} location Location
+ * @param {string} dataset Dataset
+ * @param {string} dicomStore Dicom Store
+ * @param {string} studyId Study UID
+ * @param {string} seriesId Series UID
+ * @return {Promise<Object<string, Object>[]>} List of metadata for all instances in the series
+ */
+const fetchMetadata =
+    async (projectId, location, dataset, dicomStore, studyId, seriesId) => {
+  const data = await gapi.client.healthcare.projects.locations.datasets
+    .dicomStores.studies.series.retrieveMetadata({
+      parent: `projects/${projectId}/locations/${location}/` +
+      `datasets/${dataset}/dicomStores/${dicomStore}`,
+      dicomWebPath: `studies/${studyId}/series/${seriesId}/metadata`,
+    });
+
+  return data.result;
+};
+
+/**
+ * Fetches a dicom file from a given url using Google Authentication
+ * @param {string} url Url for the dicom file
+ * @return {Uint8Array} Byte array of DICOM P10 contents
+ */
+const fetchDicomFile = async (url) => {
+  // TODO(#10) Revisit using gzip without multipart headers once fix is launched
+  // TODO(#11) Investigate optimal accept header for compressed instances
+  const response = await authenticatedFetch(url, {
+    headers: {
+      'Accept': DICOM_CONTENT_TYPE,
+    },
+  });
+
+  // TODO - Either don't use multipart headers once gzip is enabled for
+  // non-multipart headers or search for the header boundary instead of using
+  // a constant value, as the length of the header could change and break this
+  let arrayBuffer = await response.arrayBuffer();
+  // Strip multipart boundary from response
+  const startIndex = DCM_BOUNDARY_TOP_BYTE_LEN;
+  const endIndex = arrayBuffer.byteLength - DCM_BOUNDARY_BOTTOM_BYTE_LEN;
+  arrayBuffer = arrayBuffer.slice(startIndex, endIndex);
+
+  return new Int16Array(arrayBuffer);
+};
+
+/**
+ * @typedef {Object} CancelablePromise
+ * @property {Promise} promise The promise object
+ * @property {function(): undefined} cancel Function to cancel the promise
+ */
+
+/**
+ * Turns a promise into a cancelable promise to avoid
+ * setting state after component unmounts
+ * @param {Promise} promise Promise to make cancelable
+ * @return {CancelablePromise} The cancelable promise
+ */
+const makeCancelable = (promise) => {
+  let hasCanceled_ = false;
+
+  const wrappedPromise = new Promise((resolve, reject) => {
+    promise.then(
+        // eslint-disable-next-line prefer-promise-reject-errors
+        (val) => hasCanceled_ ? reject({isCanceled: true}) : resolve(val),
+        // eslint-disable-next-line prefer-promise-reject-errors
+        (error) => hasCanceled_ ? reject({isCanceled: true}) : reject(error),
+    );
+  });
+
+  return {
+    promise: wrappedPromise,
+    cancel() {
+      hasCanceled_ = true;
+    },
+  };
+};
+
+export {
+  authenticatedFetch,
+  fetchProjects,
+  fetchLocations,
+  fetchDatasets,
+  fetchDicomStores,
+  fetchStudies,
+  fetchSeries,
+  fetchMetadata,
+  fetchDicomFile,
+  makeCancelable,
+};
