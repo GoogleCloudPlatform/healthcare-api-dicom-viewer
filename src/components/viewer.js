@@ -1,15 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-<<<<<<< HEAD
-import {Paper, Box, LinearProgress, Typography,
-  TextField, Button} from '@material-ui/core';
-=======
 import {
   Box, LinearProgress, Typography,
-  TextField, Button, Checkbox,
-  FormControlLabel,
+  TextField, Button,
 } from '@material-ui/core';
->>>>>>> d28de42... Added checkboxes for using webworkers
 import * as cornerstone from 'cornerstone-core';
 import * as api from '../api.js';
 import {DICOM_TAGS} from '../dicomValues.js';
@@ -43,8 +37,6 @@ export default class Viewer extends React.Component {
       totalTimer: 0,
       timeToFirstImage: 0,
       maxSimultaneousRequests: 20,
-      useWebworkersToFetch: true,
-      useWebworkersToParse: true,
       isDisplaying: false,
     };
 
@@ -74,10 +66,6 @@ export default class Viewer extends React.Component {
     this.canvasElement.addEventListener('cornerstoneimagerendered',
         () => this.onImageRendered());
     this.getInstances();
-    dicomImageLoader.configure({
-      useWebworkersToFetch: this.state.useWebworkersToFetch,
-      useWebworkersToParse: this.state.useWebworkersToParse,
-    });
   }
 
   /**
@@ -214,34 +202,6 @@ export default class Viewer extends React.Component {
   }
 
   /**
-   * Fired when checkbox is changed for using fetch webworkers
-   * @param {React.ChangeEvent<HTMLInputElement>} event Event object
-   */
-  handleWebworkerFetchChecked(event) {
-    this.setState({
-      useWebworkersToFetch: event.target.checked,
-    });
-
-    dicomImageLoader.configure({
-      useWebworkersToFetch: event.target.checked,
-    });
-  }
-
-  /**
-   * Fired when checkbox is changed for using parse webworkers
-   * @param {React.ChangeEvent<HTMLInputElement>} event Event object
-   */
-  handleWebworkerParseChecked(event) {
-    this.setState({
-      useWebworkersToParse: event.target.checked,
-    });
-
-    dicomImageLoader.configure({
-      useWebworkersToParse: event.target.checked,
-    });
-  }
-
-  /**
    * Renders the component
    * @return {ReactComponent} <Viewer/>
    */
@@ -270,27 +230,7 @@ export default class Viewer extends React.Component {
             defaultValue={this.state.maxSimultaneousRequests}
             onChange={(e) => {
               this.setState({maxSimultaneousRequests: Number(e.target.value)});
-            }} /><br/>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={this.state.useWebworkersToFetch}
-                onChange={(e) => this.handleWebworkerFetchChecked(e)}
-                color="primary"
-              />
-            }
-            label="Use Webworkers to Fetch"
-          /><br/>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={this.state.useWebworkersToParse}
-                onChange={(e) => this.handleWebworkerParseChecked(e)}
-                color="primary"
-              />
-            }
-            label="Use Webworkers to Parse"
-          /><br/>
+            }} /><br/><br/>
           <Button
             variant="contained"
             color="primary"
