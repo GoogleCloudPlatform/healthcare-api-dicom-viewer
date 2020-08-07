@@ -8,7 +8,6 @@ import * as cornerstone from 'cornerstone-core';
 import * as api from '../api.js';
 import {DICOM_TAGS} from '../dicomValues.js';
 import DicomImageSequencer from '../dicomImageSequencer.js';
-import * as dicomImageLoader from '../dicomImageLoader/dicomImageLoader.js';
 
 /**
  * React Component for viewing medical images
