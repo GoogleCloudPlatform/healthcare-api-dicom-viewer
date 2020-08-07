@@ -62,6 +62,9 @@ const fetchProjects = async (searchQuery) => {
   // query is used to find specific projects
   const data = await gapi.client.cloudresourcemanager.projects.list(request);
 
+  if (!data.result.projects) {
+    return [];
+  }
   return data.result.projects.map((project) => project.projectId);
 };
 
@@ -75,6 +78,9 @@ const fetchLocations = async (projectId) => {
     name: `projects/${projectId}`,
   });
 
+  if (!data.result.locations) {
+    return [];
+  }
   // Return a list of location Id's
   return data.result.locations.map((location) => location.locationId);
 };
@@ -92,6 +98,9 @@ const fetchDatasets = async (projectId, location) => {
     parent: `projects/${projectId}/locations/${location}`,
   });
 
+  if (!data.result.datasets) {
+    return [];
+  }
   // Return a list of datasets by only using content of string after last '/'
   return data.result.datasets
       .map((dataset) => dataset.name.split('/').slice(-1)[0]);
@@ -113,6 +122,9 @@ const fetchDicomStores = async (projectId, location, dataset) => {
           `datasets/${dataset}`,
       });
 
+  if (!data.result.dicomStores) {
+    return [];
+  }
   // Return a list of dicomStores by only using content of string after last '/'
   return data.result.dicomStores.map((dicomStore) =>
     dicomStore.name.split('/').slice(-1)[0]);

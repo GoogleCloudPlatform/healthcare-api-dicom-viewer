@@ -34,6 +34,7 @@ export default function Main() {
 
   // Declare state variables
   const [, setIsSignedIn] = useState(false);
+  const [authInitialized, setAuthInitialized] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [errorModalOpen, setErrorModalOpen] = useState(false);
 
@@ -78,6 +79,8 @@ export default function Main() {
   useEffect(() => {
     // Load GooglAuth library on mount
     Auth.initClient().then(() => {
+      setAuthInitialized(true);
+
       // Set up listener to listen to signed in state changes
       Auth.onSignedInChanged((isSignedIn) => {
         setIsSignedIn(isSignedIn);
@@ -272,7 +275,10 @@ export default function Main() {
   };
 
   return (
-    <div className={classes.root}>
+    <div
+      className={classes.root}
+      style={{display: authInitialized ? 'block' : 'none'}}
+    >
       <Box m={2} display="flex" flexDirection="row">
         <Box flexGrow={1}>
           <Breadcrumbs>
