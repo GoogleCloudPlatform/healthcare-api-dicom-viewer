@@ -140,4 +140,4 @@ test('User can navigate between project, location, dataset, dicomStore, study, a
     expect(screen.queryByText('Select Project')).not.toBeNull());
   await waitFor(() =>
     expect(screen.getAllByText(/^project\d+$/)).toHaveLength(5));
-});
+}, 10000);
