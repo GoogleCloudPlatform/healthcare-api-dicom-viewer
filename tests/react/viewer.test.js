@@ -93,6 +93,11 @@ test('Instances display in correct order', async (done) => {
     const instanceUID = image.imageId.split('/').pop();
     expect(instanceUID).toEqual(correctInstanceOrder.shift());
     if (correctInstanceOrder.length == 0) {
+      // Check that dicom image sequencer queues are empty, and there
+      // are no references to images in the sequencer to avoid mem leak
+      expect(this.dicomSequencer.instanceQueue.length).toBe(0);
+      expect(this.dicomSequencer.fetchQueue.length).toBe(0);
+      expect(Object.keys(this.dicomSequencer.loadedImages).length).toBe(0);
       done();
     }
   };
