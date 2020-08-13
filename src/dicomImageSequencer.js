@@ -91,11 +91,18 @@ export default class DicomImageSequencer {
    */
   checkInstanceQueue(onImageReady) {
     while (this.instanceQueue.length > 0) {
-      const nextImage = this.instanceQueue[0];
-      if (this.loadedImages.hasOwnProperty(nextImage)) {
-        onImageReady(this.loadedImages[nextImage]);
+      const nextImageId = this.instanceQueue[0];
+      if (this.loadedImages.hasOwnProperty(nextImageId)) {
+        // Remove this imageId from the queue
         this.instanceQueue.shift();
-        delete this.loadedImages[nextImage];
+
+        // Get the image object and delete this sequencer's
+        // reference to it to avoid memory leaks
+        const image = this.loadedImages[nextImageId];
+        delete this.loadedImages[nextImageId];
+
+        // Call onImageReady with the prepared image
+        onImageReady(image);
       } else {
         // If an instance in the queue is not ready, stop iterating
         return;
