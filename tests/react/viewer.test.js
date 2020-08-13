@@ -30,6 +30,9 @@ api.fetchMetadata.mockResolvedValue([
     [DICOM_TAGS.NUM_ROWS]: {
       Value: [3],
     },
+    [DICOM_TAGS.NUM_FRAMES]: {
+      Value: [2], // instance2 is a multi-frame instance
+    },
   },
   {
     [DICOM_TAGS.INSTANCE_UID]: {
@@ -80,21 +83,36 @@ test('Start button is disabled until instance metadata is fetched', async () => 
   await waitFor(() => expect(screen.getByRole('button')).not.toHaveAttribute('disabled'));
 });
 
-test('Instances display in correct order', async (done) => {
-  const correctInstanceOrder = [
-    'instance1-UID',
-    'instance2-UID',
-    'instance3-UID',
+test('Instances/frames display in correct order', async (done) => {
+  const correctImageOrder = [
+    {uid: 'instance1-UID', frame: '1'},
+    {uid: 'instance2-UID', frame: '1'},
+    {uid: 'instance2-UID', frame: '2'}, // instance2 has 2 frames, so it shows up twice
+    {uid: 'instance3-UID', frame: '1'},
   ];
 
   // Override the onImageReady function in the viewer
   // to check that images are being loaded in correct order
   Viewer.prototype.onImageReady = function(image) {
-    const instanceUID = image.imageId.split('/').pop();
-    expect(instanceUID).toEqual(correctInstanceOrder.shift());
-    if (correctInstanceOrder.length == 0) {
-      // Check that dicom image sequencer queues are empty, and there
-      // are no references to images in the sequencer to avoid mem leak
+    // imageId is a url, so split by '/' token
+    const imageIdSplit = image.imageId.split('/');
+
+    // Last element in imageId url is frame number (ex: .../frames/1)
+    const frame = imageIdSplit[imageIdSplit.length - 1];
+
+    // 3rd to last element in imageId url is instance uid
+    // (ex: .../instances/INSTANCE_UID/frames/1)
+    const instanceUID = imageIdSplit[imageIdSplit.length - 3];
+
+    // Ensure images were returned in correct order
+    const correctImage = correctImageOrder.shift();
+    expect(instanceUID).toEqual(correctImage.uid);
+    expect(frame).toEqual(correctImage.frame);
+
+    if (correctImageOrder.length == 0) {
+      /* After all images have been loaded, check that dicom
+         image sequencer queues are empty, and there are no
+         references to images in the sequencer to avoid mem leak */
       expect(this.dicomSequencer.instanceQueue.length).toBe(0);
       expect(this.dicomSequencer.fetchQueue.length).toBe(0);
       expect(Object.keys(this.dicomSequencer.loadedImages).length).toBe(0);
