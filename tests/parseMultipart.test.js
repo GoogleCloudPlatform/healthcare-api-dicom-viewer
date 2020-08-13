@@ -83,4 +83,14 @@ test('parseMultipart correctly strips multipart headers and boundaries', () => {
   parsedArrayBuffer = parseMultipart(arrayBuffer, boundary);
 
   expect(arrayBufferToString(parsedArrayBuffer)).toEqual(content);
+
+  // Invalid multipart response example (expect to throw)
+  // Create an array buffer without multipart boundary or header
+  content = 'Hello world!';
+  arrayBuffer = new ArrayBuffer(content.length);
+  const byteArray = new Uint8Array(arrayBuffer);
+  for (let i = 0; i < content.length; i++) {
+    byteArray[i] = content.charCodeAt(i);
+  }
+  expect(() => parseMultipart(arrayBuffer)).toThrow();
 });
