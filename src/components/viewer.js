@@ -1,7 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {Paper, Box, LinearProgress, Typography,
-  TextField, Button} from '@material-ui/core';
+import {
+  Box, LinearProgress, Typography,
+  TextField, Button,
+} from '@material-ui/core';
 import * as cornerstone from 'cornerstone-core';
 import * as api from '../api.js';
 import {DICOM_TAGS} from '../dicomValues.js';
@@ -34,6 +36,7 @@ export default class Viewer extends React.Component {
       totalTimer: 0,
       timeToFirstImage: 0,
       maxSimultaneousRequests: 20,
+      isDisplaying: false,
     };
 
     this.dicomSequencer = new DicomImageSequencer(this.props.project,
@@ -101,6 +104,10 @@ export default class Viewer extends React.Component {
       // metrics interval and run one final time
       clearInterval(this.metricsIntervalId);
       this.updateMetrics();
+
+      this.setState({
+        isDisplaying: false,
+      });
     }
     this.displayNextImage();
   }
@@ -123,7 +130,7 @@ export default class Viewer extends React.Component {
   updateMetrics() {
     // Update progress bar
     this.setState({
-      readyImagesProgress: this.readyImages.length /
+      readyImagesProgress: this.readyImagesCount /
                               this.state.instances.length * 100,
       numReadyImages: this.readyImagesCount,
       renderedImagesProgress: this.renderedImagesCount /
@@ -152,14 +159,18 @@ export default class Viewer extends React.Component {
       numRenderedImages: 0,
       renderedImagesProgress: 0,
       timeToFirstImage: 0,
+      isDisplaying: true,
     });
+
+    // Purge cornerstone cache
+    cornerstone.imageCache.purgeCache();
 
     this.dicomSequencer.maxSimultaneousRequests =
         this.state.maxSimultaneousRequests;
     this.dicomSequencer.setInstances(this.state.instances);
     this.dicomSequencer.fetchInstances((image) => this.onImageReady(image));
 
-    // Set up an interval for updating metrics
+    // Set up an interval for updating metrics (10 times per second)
     this.metricsIntervalId = setInterval(() => this.updateMetrics(), 100);
   }
 
@@ -195,30 +206,40 @@ export default class Viewer extends React.Component {
    */
   render() {
     return (
-      <Paper>
-        <Box p={2}>
+      <Box p={2} display="flex" flexWrap="wrap">
+        <Box mr={2}>
           <div id="cornerstone-div"
             ref={(input) => {
               this.canvasElement = input;
             }}
-            style={{width: 500, height: 500}}>
+            style={{
+              width: 500,
+              height: 500,
+              background: 'black',
+            }}
+          >
             <canvas className="cornerstone-canvas"></canvas>
           </div>
           <LinearProgress variant="buffer"
             value={this.state.renderedImagesProgress}
-            valueBuffer={this.state.readyImagesProgress} />
-          <TextField label="Max Simultaneous Requests"
+            valueBuffer={this.state.readyImagesProgress} /><br/>
+          <TextField
+            label="Max Simultaneous Requests"
+            style={{width: 250}}
             defaultValue={this.state.maxSimultaneousRequests}
             onChange={(e) => {
               this.setState({maxSimultaneousRequests: Number(e.target.value)});
-            }} />
+            }} /><br/><br/>
           <Button
             variant="contained"
             color="primary"
-            disabled={this.state.instances.length == 0}
+            disabled={this.state.instances.length == 0 ||
+                this.state.isDisplaying}
             onClick={() => this.startDisplayingInstances()}>
               Start
           </Button>
+        </Box>
+        <Box>
           <Typography variant="h5">
             Frames Loaded: {this.state.numReadyImages}
           </Typography>
@@ -238,7 +259,7 @@ export default class Viewer extends React.Component {
                         (this.state.renderTimer / 1000)).toFixed(2)}
           </Typography>
         </Box>
-      </Paper>
+      </Box>
     );
   }
 }

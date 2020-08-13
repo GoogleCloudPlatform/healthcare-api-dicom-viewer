@@ -1,10 +1,7 @@
 /** @module api */
 import Auth from './auth.js';
-import {
-  DICOM_CONTENT_TYPE,
-  DCM_BOUNDARY_TOP_BYTE_LEN,
-  DCM_BOUNDARY_BOTTOM_BYTE_LEN,
-} from './dicomValues.js';
+import {DICOM_CONTENT_TYPE} from './dicomValues.js';
+import parseMultipart from './parseMultipart.js';
 
 /**
  * Fetches a url using a stored access token, signing the user in
@@ -65,6 +62,9 @@ const fetchProjects = async (searchQuery) => {
   // query is used to find specific projects
   const data = await gapi.client.cloudresourcemanager.projects.list(request);
 
+  if (!data.result.projects) {
+    return [];
+  }
   return data.result.projects.map((project) => project.projectId);
 };
 
@@ -78,6 +78,9 @@ const fetchLocations = async (projectId) => {
     name: `projects/${projectId}`,
   });
 
+  if (!data.result.locations) {
+    return [];
+  }
   // Return a list of location Id's
   return data.result.locations.map((location) => location.locationId);
 };
@@ -95,6 +98,9 @@ const fetchDatasets = async (projectId, location) => {
     parent: `projects/${projectId}/locations/${location}`,
   });
 
+  if (!data.result.datasets) {
+    return [];
+  }
   // Return a list of datasets by only using content of string after last '/'
   return data.result.datasets
       .map((dataset) => dataset.name.split('/').slice(-1)[0]);
@@ -116,6 +122,9 @@ const fetchDicomStores = async (projectId, location, dataset) => {
           `datasets/${dataset}`,
       });
 
+  if (!data.result.dicomStores) {
+    return [];
+  }
   // Return a list of dicomStores by only using content of string after last '/'
   return data.result.dicomStores.map((dicomStore) =>
     dicomStore.name.split('/').slice(-1)[0]);
@@ -171,7 +180,7 @@ const fetchSeries =
  * @param {string} dicomStore Dicom Store
  * @param {string} studyId Study UID
  * @param {string} seriesId Series UID
- * @return {Promise<Object<string, Object>[]>} List of metadata for all instances in the series
+ * @return {Promise<Array<Object<string, Object>>>} List of metadata for all instances in the series
  */
 const fetchMetadata =
     async (projectId, location, dataset, dicomStore, studyId, seriesId) => {
@@ -199,14 +208,12 @@ const fetchDicomFile = async (url) => {
     },
   });
 
-  // TODO - Either don't use multipart headers once gzip is enabled for
-  // non-multipart headers or search for the header boundary instead of using
-  // a constant value, as the length of the header could change and break this
-  let arrayBuffer = await response.arrayBuffer();
-  // Strip multipart boundary from response
-  const startIndex = DCM_BOUNDARY_TOP_BYTE_LEN;
-  const endIndex = arrayBuffer.byteLength - DCM_BOUNDARY_BOTTOM_BYTE_LEN;
-  arrayBuffer = arrayBuffer.slice(startIndex, endIndex);
+  // Get the content-type header to find the boundary string
+  const contentTypeHeader = response.headers.get('content-type');
+  // Parse the contentTypeHeader and remove the "boundary=" prefix
+  const boundary = contentTypeHeader.split(';')[1].substring(10);
+  // Parse multipart header and boundary from arrayBuffer
+  const arrayBuffer = parseMultipart(await response.arrayBuffer(), boundary);
 
   return new Int16Array(arrayBuffer);
 };

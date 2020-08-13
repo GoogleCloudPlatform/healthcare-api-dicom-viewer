@@ -23,9 +23,27 @@ const useStyles = makeStyles((theme) => ({
  * @return {ReactElement} <FilterItems/>
  */
 function FilterItems({items, searchQuery, onClickItem, maxDisplayAmount}) {
+  if (items.length == 0) {
+    return (
+      <ListItem>
+        <ListItemText
+          primary="No data to display." />
+      </ListItem>
+    );
+  }
+
   const filteredItems = items.filter((item) => {
     return item.value.toLowerCase().includes(searchQuery.toLowerCase().trim());
   });
+
+  if (filteredItems.length == 0) {
+    return (
+      <ListItem>
+        <ListItemText
+          primary="No results found." />
+      </ListItem>
+    );
+  }
 
   return filteredItems.slice(0, maxDisplayAmount).map((item) => {
     return (
