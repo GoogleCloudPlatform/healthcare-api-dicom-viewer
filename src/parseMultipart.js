@@ -7,7 +7,7 @@ const HEADER_TOKEN = '\r\n\r\n';
  * @param {Uint8Array} byteArray Byte array to search
  * @param {string} str String to search for
  * @param {number=} offset Optional offset index to begin search
- * @return {number} Index where string was found
+ * @return {number} Index where string was found (-1 if not found)
  */
 const findStringInByteArray = (byteArray, str, offset) => {
   const startIndex = offset ? offset : 0;
