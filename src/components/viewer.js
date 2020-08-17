@@ -34,7 +34,7 @@ export default class Viewer extends React.Component {
       numRenderedImages: 0,
       renderedImagesProgress: 0,
       renderTimer: 0,
-      fetchTimer: 0,
+      fetchTime: 0,
       totalTimer: 0,
       timeToFirstImage: 0,
       maxSimultaneousRequests: 20,
@@ -91,6 +91,13 @@ export default class Viewer extends React.Component {
   onImageReady(image) {
     this.readyImages.push(image);
     this.readyImagesCount++;
+
+    // When last image is loaded, update total fetch time
+    if (this.readyImagesCount == this.totalImagesCount) {
+      this.setState({
+        fetchTime: Date.now() - this.fetchStartTime,
+      });
+    }
 
     if (this.newSequence) {
       // If this is the first image in the sequence, render immediately
@@ -163,7 +170,7 @@ export default class Viewer extends React.Component {
     this.setState({
       renderTimer: 0,
       totalTimer: 0,
-      fetchTimer: 0,
+      fetchTime: 0,
       numReadyImages: 0,
       readyImagesProgress: 0,
       numRenderedImages: 0,
@@ -309,16 +316,21 @@ export default class Viewer extends React.Component {
             Frames Displayed: {this.state.numRenderedImages}
           </Typography>
           <Typography variant="h5">
-            Total Time: {(this.state.totalTimer / 1000).toFixed(2)}s
-          </Typography>
-          <Typography variant="h5">
             Time to First Image: {
-              (this.state.timeToFirstImage / 1000).toFixed(2)
+              ((this.state.timeToFirstImage ? this.state.timeToFirstImage :
+                  this.state.totalTimer) / 1000).toFixed(2)
             }s
           </Typography>
           <Typography variant="h5">
+            Image Load Time: {((this.state.fetchTime ? this.state.fetchTime :
+                this.state.totalTimer) / 1000).toFixed(2)}s
+          </Typography>
+          <Typography variant="h5">
+            Total Time: {(this.state.totalTimer / 1000).toFixed(2)}s
+          </Typography>
+          <Typography variant="h5">
             Average FPS: {(this.state.numRenderedImages /
-                        (this.state.renderTimer / 1000)).toFixed(2)}
+                (this.state.renderTimer / 1000)).toFixed(2)}
           </Typography>
         </Box>
       </Box>
