@@ -52,6 +52,7 @@ export default class Viewer extends React.Component {
         this.props.series,
     );
 
+    this.totalImagesCount = 0;
     this.readyImages = [];
     this.readyImagesCount = 0;
     this.newSequence = false;
@@ -108,7 +109,7 @@ export default class Viewer extends React.Component {
       this.setState({
         timeToFirstImage: Date.now() - this.fetchStartTime,
       });
-    } else if (this.renderedImagesCount == this.state.instances.length) {
+    } else if (this.renderedImagesCount == this.totalImagesCount) {
       // When last image is rendered, stop the
       // metrics interval and run one final time
       clearInterval(this.metricsIntervalId);
@@ -140,10 +141,10 @@ export default class Viewer extends React.Component {
     // Update progress bar
     this.setState({
       readyImagesProgress: this.readyImagesCount /
-                              this.state.instances.length * 100,
+                              this.totalImagesCount * 100,
       numReadyImages: this.readyImagesCount,
       renderedImagesProgress: this.renderedImagesCount /
-                              this.state.instances.length * 100,
+                              this.totalImagesCount * 100,
       renderTimer: Date.now() - this.renderStartTime,
       totalTimer: Date.now() - this.fetchStartTime,
       numRenderedImages: this.renderedImagesCount,
@@ -174,13 +175,15 @@ export default class Viewer extends React.Component {
     // Purge cornerstone cache
     cornerstone.imageCache.purgeCache();
 
+    // Initialize dicomSequencer and begin fetching
     this.dicomSequencer.maxSimultaneousRequests =
         this.state.maxSimultaneousRequests;
     this.dicomSequencer.setInstances(this.state.instances);
-    this.dicomSequencer.fetchInstances((image) => this.onImageReady(image));
+    this.totalImagesCount =
+        this.dicomSequencer.fetchInstances((image) => this.onImageReady(image));
 
-    // Set up an interval for updating metrics (20 times per second)
-    this.metricsIntervalId = setInterval(() => this.updateMetrics(), 50);
+    // Set up an interval for updating metrics (10 times per second)
+    this.metricsIntervalId = setInterval(() => this.updateMetrics(), 100);
   }
 
   /**

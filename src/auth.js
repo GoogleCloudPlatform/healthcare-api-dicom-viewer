@@ -1,4 +1,4 @@
-/** @module auth */
+/** @module Auth */
 import {CLIENT_ID} from './config.js';
 
 let GoogleAuth;

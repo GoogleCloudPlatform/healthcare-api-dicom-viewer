@@ -1,7 +1,9 @@
+/** @module DicomImageSequencer */
 import * as cornerstone from 'cornerstone-core';
 import * as dicomImageLoader from './dicomImageLoader/dicomImageLoader.js';
 import {IMAGE_LOADER_PREFIX} from './config.js';
 import {DICOM_TAGS} from './dicomValues.js';
+import {setMetadata} from './dicomImageLoader/dicomImageLoader.js';
 
 /**
  * @callback onImageReady
@@ -55,18 +57,28 @@ export default class DicomImageSequencer {
   /**
    * Fetches and loads dicom images in sequential order
    * @param {onImageReady} onImageReady Runs when the next image in the
-   * sequence has loaded
+   *    sequence has loaded
+   * @return {number} Total number of images to be displayed
    */
   fetchInstances(onImageReady) {
     for (const instance of this.instances) {
-      // Add fetches and instances to respective queues
-      const imageURL = `${IMAGE_LOADER_PREFIX}://healthcare.googleapis.com/v1/projects/${this.project}/locations/${this.location}/datasets/${this.dataset}/dicomStores/${this.dicomStore}/dicomWeb/studies/${this.study[DICOM_TAGS.STUDY_UID].Value[0]}/series/${this.series[DICOM_TAGS.SERIES_UID].Value[0]}/instances/${instance[DICOM_TAGS.INSTANCE_UID].Value[0]}`;
-      this.instanceQueue.push(imageURL);
-      this.fetchQueue.push(imageURL);
+      // Generate urls for individual frames to support multi-frame instances
+      const numFrames = instance[DICOM_TAGS.NUM_FRAMES] ?
+          instance[DICOM_TAGS.NUM_FRAMES].Value[0] : 1;
 
-      // Store metaData in dicomImageLoader to be used for creating image object
-      dicomImageLoader.setMetadata(imageURL, instance);
+      for (let frameNum = 1; frameNum <= numFrames; frameNum++) {
+        // Add fetches and instances to respective queues
+        const imageURL = `${IMAGE_LOADER_PREFIX}://healthcare.googleapis.com/v1/projects/${this.project}/locations/${this.location}/datasets/${this.dataset}/dicomStores/${this.dicomStore}/dicomWeb/studies/${this.study[DICOM_TAGS.STUDY_UID].Value[0]}/series/${this.series[DICOM_TAGS.SERIES_UID].Value[0]}/instances/${instance[DICOM_TAGS.INSTANCE_UID].Value[0]}/frames/${frameNum}`;
+        this.instanceQueue.push(imageURL);
+        this.fetchQueue.push(imageURL);
+
+        // Store metaData in dicomImageLoader to
+        // be used for creating image object
+        setMetadata(imageURL, instance);
+      }
     }
+
+    const totalImages = this.instanceQueue.length;
 
     // Check fetch queue after image loader finishes
     // fetching each instance
@@ -77,6 +89,8 @@ export default class DicomImageSequencer {
 
     // Begin making fetch requests
     this.checkFetchQueue(onImageReady);
+
+    return totalImages;
   }
 
   /**
@@ -86,11 +100,18 @@ export default class DicomImageSequencer {
    */
   checkInstanceQueue(onImageReady) {
     while (this.instanceQueue.length > 0) {
-      const nextImage = this.instanceQueue[0];
-      if (this.loadedImages.hasOwnProperty(nextImage)) {
-        onImageReady(this.loadedImages[nextImage]);
+      const nextImageId = this.instanceQueue[0];
+      if (this.loadedImages.hasOwnProperty(nextImageId)) {
+        // Remove this imageId from the queue
         this.instanceQueue.shift();
-        delete this.loadedImages[nextImage];
+
+        // Get the image object and delete this sequencer's
+        // reference to it to avoid memory leaks
+        const image = this.loadedImages[nextImageId];
+        delete this.loadedImages[nextImageId];
+
+        // Call onImageReady with the prepared image
+        onImageReady(image);
       } else {
         // If an instance in the queue is not ready, stop iterating
         return;
