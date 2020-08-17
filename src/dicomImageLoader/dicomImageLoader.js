@@ -85,7 +85,6 @@ const loadImage = (imageId) => {
 export {
   loadImage,
   configure,
-  createImageObjectFromDicom,
   onFetch,
   sendMetaDataToAllWebworkers,
 };
