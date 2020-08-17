@@ -1,6 +1,5 @@
 import DicomWorker from './dicom.worker.js';
 import Auth from '../../auth.js';
-import {metaDataDict} from '../createImageObject';
 
 /**
  * @typedef {Object} Worker
@@ -75,6 +74,20 @@ class DicomWorkerManager {
   }
 
   /**
+   * Sends a metadata dict to all webworkers for them
+   *    to use when creating image objects
+   * @param {Object.<string, object>} metaData
+   */
+  sendMetaDataToAllWebworkers(metaData) {
+    for (let i = 0; i < this.workers.length; i++) {
+      this.workers[i].worker.postMessage({
+        task: 'setMetaData',
+        metaData,
+      });
+    }
+  }
+
+  /**
    * Uses a worker to fetch a dicom file
    * @param {string} url Url to fetch
    * @return {Promise<Uint8Array>} Promise that returns byte array of dicom file
@@ -121,7 +134,6 @@ class DicomWorkerManager {
         task: 'createImage',
         pixelData,
         imageId,
-        metaData: metaDataDict[imageId],
       });
       worker.activeTasks++;
     });

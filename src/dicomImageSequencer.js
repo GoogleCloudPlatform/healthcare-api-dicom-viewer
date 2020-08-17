@@ -87,6 +87,10 @@ export default class DicomImageSequencer {
       this.checkFetchQueue(onImageReady);
     });
 
+    // Send the stored metadata to all webworkers for them to use
+    // when creating image objects
+    dicomImageLoader.sendMetaDataToAllWebworkers();
+
     // Begin making fetch requests
     this.checkFetchQueue(onImageReady);
 

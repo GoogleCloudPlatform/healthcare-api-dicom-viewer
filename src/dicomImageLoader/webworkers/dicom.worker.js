@@ -1,6 +1,10 @@
 import * as api from '../../api.js';
 import createImageObjectFromDicom from '../createImageObject.js';
 
+/** Stores metaData for each imageId
+ * @type {Object.<string, object>} */
+let metaDataDict = {};
+
 const fetchDicom = (url) => {
   api.fetchDicomFile(url)
       .then((pixelData) => {
@@ -19,8 +23,13 @@ const fetchDicom = (url) => {
       });
 };
 
-const createImage = (imageId, pixelData, metaData) => {
-  const image = createImageObjectFromDicom(imageId, pixelData, metaData);
+const setMetaData = (metaData) => {
+  metaDataDict = metaData;
+};
+
+const createImage = (imageId, pixelData) => {
+  const image =
+      createImageObjectFromDicom(imageId, pixelData, metaDataDict[imageId]);
   // Functions cannot be transferred, so delete getPixelData and add it back on
   // the main thread
   delete image.getPixelData;
@@ -47,8 +56,10 @@ self.addEventListener('message', (event) => {
         createImage(
             event.data.imageId,
             event.data.pixelData,
-            event.data.metaData,
         );
+        break;
+      case 'setMetaData':
+        setMetaData(event.data.metaData);
         break;
       default:
         console.error('Invalid dicomworker event ' + event.data.action);

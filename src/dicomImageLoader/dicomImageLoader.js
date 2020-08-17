@@ -1,6 +1,6 @@
 /** @module dicomImageLoader */
 import * as api from '../api.js';
-import createImageObjectFromDicom from './createImageObject.js';
+import createImageObjectFromDicom, {metaDataDict} from './createImageObject.js';
 import DicomWorkerManager from './webworkers/dicomWorkerManager.js';
 import {IMAGE_LOADER_PREFIX} from '../config.js';
 
@@ -31,6 +31,14 @@ const configure = (newConfig) => {
  */
 const onFetch = (onFetch) => {
   onImageFetch = onFetch;
+};
+
+/**
+ * Sends the metadata dict stored in createImageObject
+ * to all webworkers for them to use when creating image objects
+ */
+const sendMetaDataToAllWebworkers = () => {
+  workerManager.sendMetaDataToAllWebworkers(metaDataDict);
 };
 
 /**
@@ -74,5 +82,11 @@ const loadImage = (imageId) => {
   };
 };
 
-export {loadImage, configure, createImageObjectFromDicom, onFetch};
+export {
+  loadImage,
+  configure,
+  createImageObjectFromDicom,
+  onFetch,
+  sendMetaDataToAllWebworkers,
+};
 export {setMetadata} from './createImageObject.js';
