@@ -3,6 +3,8 @@
 This repository contains a tool to view DICOM data served by Google Cloud
 Healthcare API.
 
+The goal of this viewer is to be used as reference for the [best practices](https://github.com/GoogleCloudPlatform/healthcare-api-dicom-viewer/wiki/Performant-Medical-Image-Viewer-Findings) on integrating the Google Healthcare API into a medical image viewer with optimal performance.
+
 ## Setup Instructions
 To use the viewer locally, you will need to create [OAuth2.0 client credentials](https://cloud.google.com/docs/authentication/end-user) in Google Cloud, and copy your client-id into [src/config.js](src/config.js)
 ```shell
