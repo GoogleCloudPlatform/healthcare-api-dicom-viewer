@@ -1,7 +1,6 @@
 # Healthcare DICOM viewer
 
-This repository contains a tool to view DICOM data served by Google Cloud
-Healthcare API.
+This repository contains a tool to view DICOM data served by Google Cloud Healthcare API.
 
 The goal of this viewer is to be used as reference for the [best practices](https://github.com/GoogleCloudPlatform/healthcare-api-dicom-viewer/wiki/Performant-Medical-Image-Viewer-Findings) on integrating the Google Healthcare API into a medical image viewer with optimal performance.
 
