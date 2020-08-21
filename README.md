@@ -2,10 +2,21 @@
 
 This repository contains a tool to view DICOM data served by Google Cloud Healthcare API.
 
-The goal of this viewer is to be used as reference for the [best practices](https://github.com/GoogleCloudPlatform/healthcare-api-dicom-viewer/wiki/Performant-Medical-Image-Viewer-Findings) on integrating the Google Healthcare API into a medical image viewer with optimal performance.
+The goal of this viewer is to be used as reference for the [best practices](https://cloud.google.com/healthcare/docs/how-tos/dicom-best-practices) on integrating the Google Healthcare API into a medical image viewer with optimal performance. For more information on integrating the Google Healthcare API with your viewer, [see here.](https://cloud.google.com/healthcare/docs/how-tos/dicom-viewers)
+
+The performance investigations made while developing this viewer are described in the [Wiki.](https://github.com/GoogleCloudPlatform/healthcare-api-dicom-viewer/wiki/Performant-Medical-Image-Viewer-Findings)
 
 ## Setup Instructions
-To use the viewer locally, you will need to create [OAuth2.0 client credentials](https://cloud.google.com/docs/authentication/end-user) in the Google Cloud Console, and copy your client-id into [src/config.js](src/config.js)
+To use the viewer locally, you will need to set up OAuth2.0 client credentials. To do this:
+1. Open [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+2. Create a new OAuth Client ID and selected "Web application"
+3. When setting up the OAuth consent screen, add the following scopes:
+    * https://www.googleapis.com/auth/cloud-healthcare
+    * https://www.googleapis.com/auth/cloudplatformprojects.readonly
+4. Add http://localhost:1234 or your host url to the Authorized JavaScript Origins & Authorized redirect URIs
+5. Copy the Client ID into [src/config.js](src/config.js)
+
+Use the below commands to run or build the application
 ```shell
 npm install # Install dependencies
 
