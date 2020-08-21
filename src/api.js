@@ -1,7 +1,6 @@
 /** @module api */
 import Auth from './auth.js';
 import {DICOM_CONTENT_TYPE} from './dicomValues.js';
-import parseMultipart from './parseMultipart.js';
 
 /**
  * Fetches a url using a stored access token, signing the user in
@@ -197,25 +196,33 @@ const fetchMetadata =
 /**
  * Fetches a dicom file from a given url using Google Authentication
  * @param {string} url Url for the dicom file
- * @return {Int16Array} Pixel data of DICOM P10 contents
+ * @param {string=} transferSyntax Transfer syntax to use
+ * @return {ArrayBuffer} Raw pixel data of DICOM P10 contents
  */
-const fetchDicomFile = async (url) => {
+const fetchDicomFile = async (url, transferSyntax) => {
   // TODO(#10) Revisit using gzip without multipart headers once fix is launched
   // TODO(#11) Investigate optimal accept header for compressed instances
+  transferSyntax = transferSyntax ? transferSyntax : '1.2.840.10008.1.2.1';
+
   const response = await authenticatedFetch(url, {
     headers: {
-      'Accept': DICOM_CONTENT_TYPE,
+      'Accept': DICOM_CONTENT_TYPE + `transfer-syntax=${transferSyntax}`,
     },
   });
 
-  // Get the content-type header to find the boundary string
-  const contentTypeHeader = response.headers.get('content-type');
-  // Parse the contentTypeHeader and remove the "boundary=" prefix
-  const boundary = contentTypeHeader.split(';')[1].substring(10);
-  // Parse multipart header and boundary from arrayBuffer
-  const arrayBuffer = parseMultipart(await response.arrayBuffer(), boundary);
+  // Get the content-type header and split it to get individual parts
+  const contentTypeHeaders = response.headers.get('content-type').split(';');
 
-  return new Int16Array(arrayBuffer);
+  // Get boundary from contentTypeHeader and remove the "boundary=" prefix
+  const boundary = contentTypeHeaders[1].substring(10);
+
+  // Get an array buffer of bytes from the response object
+  const arrayBuffer = await response.arrayBuffer();
+
+  return {
+    pixelData: arrayBuffer,
+    boundary,
+  };
 };
 
 /**

@@ -4,6 +4,9 @@ import {
   Box, LinearProgress, Typography,
   TextField, Button, Checkbox,
   FormControlLabel,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@material-ui/core';
 import * as cornerstone from 'cornerstone-core';
 import * as api from '../api.js';
@@ -41,6 +44,7 @@ export default class Viewer extends React.Component {
       useWebworkersToFetch: true,
       useWebworkersToParse: true,
       isDisplaying: false,
+      transferSyntax: '1.2.840.10008.1.2.1',
     };
 
     this.dicomSequencer = new DicomImageSequencer(
@@ -74,6 +78,7 @@ export default class Viewer extends React.Component {
     dicomImageLoader.configure({
       useWebworkersToFetch: this.state.useWebworkersToFetch,
       useWebworkersToParse: this.state.useWebworkersToParse,
+      transferSyntax: this.state.transferSyntax,
     });
   }
 
@@ -231,6 +236,7 @@ export default class Viewer extends React.Component {
     dicomImageLoader.configure({
       useWebworkersToFetch: event.target.checked,
       useWebworkersToParse: this.state.useWebworkersToParse,
+      transferSyntax: this.state.transferSyntax,
     });
   }
 
@@ -246,6 +252,23 @@ export default class Viewer extends React.Component {
     dicomImageLoader.configure({
       useWebworkersToParse: event.target.checked,
       useWebworkersToFetch: this.state.useWebworkersToFetch,
+      transferSyntax: this.state.transferSyntax,
+    });
+  }
+
+  /**
+   * Fired when transfer syntax select box changes
+   * @param {React.ChangeEvent<{value: unknown}>} event Event object
+   */
+  handleTransferSyntaxChange(event) {
+    this.setState({
+      transferSyntax: event.target.value,
+    });
+
+    dicomImageLoader.configure({
+      useWebworkersToFetch: this.state.useWebworkersToFetch,
+      useWebworkersToParse: this.state.useWebworkersToParse,
+      transferSyntax: event.target.value,
     });
   }
 
@@ -278,7 +301,20 @@ export default class Viewer extends React.Component {
             defaultValue={this.state.maxSimultaneousRequests}
             onChange={(e) => {
               this.setState({maxSimultaneousRequests: Number(e.target.value)});
-            }} /><br/>
+            }} /><br/><br/>
+          <InputLabel id="transfer-syntax-label">Transfer Syntax</InputLabel>
+          <Select
+            labelId="transfer-syntax-label"
+            value={this.state.transferSyntax}
+            onChange={(e) => this.handleTransferSyntaxChange(e)}
+          >
+            <MenuItem value={'1.2.840.10008.1.2.1'}>
+              Little Endian &quot;1.2.840.10008.1.2.1&quot;
+            </MenuItem>
+            <MenuItem value={'*'}>
+              Original &quot;*&quot;
+            </MenuItem>
+          </Select><br/>
           <FormControlLabel
             control={
               <Checkbox
