@@ -5,7 +5,7 @@ import parseMultipart from './parseMultipart.js';
 
 /**
  * Fetches a url using a stored access token, signing the user in
- * if no access token exists
+ *    if no access token exists
  * @param {RequestInfo} input The request info to fetch
  * @param {RequestInit=} init The request init object
  * @return {Promise<Response>} Fetch response object
@@ -225,7 +225,7 @@ const fetchDicomFile = async (url) => {
 
 /**
  * Turns a promise into a cancelable promise to avoid
- * setting state after component unmounts
+ *    setting state after component unmounts
  * @param {Promise} promise Promise to make cancelable
  * @return {CancelablePromise} The cancelable promise
  */

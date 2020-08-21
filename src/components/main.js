@@ -388,7 +388,9 @@ export default function Main() {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setErrorModalOpen(false)} color="primary" autoFocus>
+          <Button
+            onClick={() => setErrorModalOpen(false)}
+            color="primary" autoFocus>
             Close
           </Button>
         </DialogActions>
