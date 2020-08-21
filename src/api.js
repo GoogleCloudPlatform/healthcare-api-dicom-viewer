@@ -5,7 +5,7 @@ import parseMultipart from './parseMultipart.js';
 
 /**
  * Fetches a url using a stored access token, signing the user in
- * if no access token exists
+ *    if no access token exists
  * @param {RequestInfo} input The request info to fetch
  * @param {RequestInit=} init The request init object
  * @return {Promise<Response>} Fetch response object
@@ -197,10 +197,9 @@ const fetchMetadata =
 /**
  * Fetches a dicom file from a given url using Google Authentication
  * @param {string} url Url for the dicom file
- * @return {Uint8Array} Byte array of DICOM P10 contents
+ * @return {Int16Array} Pixel data array of DICOM P10 contents
  */
 const fetchDicomFile = async (url) => {
-  // TODO(#10) Revisit using gzip without multipart headers once fix is launched
   // TODO(#11) Investigate optimal accept header for compressed instances
   const response = await authenticatedFetch(url, {
     headers: {
@@ -226,7 +225,7 @@ const fetchDicomFile = async (url) => {
 
 /**
  * Turns a promise into a cancelable promise to avoid
- * setting state after component unmounts
+ *    setting state after component unmounts
  * @param {Promise} promise Promise to make cancelable
  * @return {CancelablePromise} The cancelable promise
  */

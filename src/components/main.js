@@ -49,7 +49,7 @@ export default function Main() {
    */
   /**
    * Function to generate state getters and setters for
-   * a list of data, loading state, and selected data
+   *    a list of data, loading state, and selected data
    * @return {NavigationState} Object containing navigation state variables
    */
   const generateNavigationState = () => {
@@ -203,9 +203,9 @@ export default function Main() {
 
   /**
    * Resets all navigation state after and including the given
-   * navigation state value
+   *    navigation state value
    * @param {('project'|'location'|'dataset'|
-   * 'dicomStore'|'study'|'series')} navigationStr Navigation state to reset
+   *    'dicomStore'|'study'|'series')} navigationStr Navigation state to reset
    */
   const resetChainedState = (navigationStr) => {
     switch (navigationStr) {
@@ -388,7 +388,9 @@ export default function Main() {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setErrorModalOpen(false)} color="primary" autoFocus>
+          <Button
+            onClick={() => setErrorModalOpen(false)}
+            color="primary" autoFocus>
             Close
           </Button>
         </DialogActions>
