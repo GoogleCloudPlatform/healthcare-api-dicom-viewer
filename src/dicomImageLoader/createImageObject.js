@@ -1,5 +1,7 @@
 /** @module dicomImageLoader */
 import {DICOM_TAGS} from '../dicomValues.js';
+import decodePixelData from './decodePixelData.js';
+import parseMultipart from '../parseMultipart.js';
 
 /** Stores metaData for each imageId
  * @type {Object.<string, object>} */
@@ -33,15 +35,30 @@ const setMetadata = (imageId, metaData) => {
 /**
  * Creates a cornerstone image object from metadata and pixel data
  * @param {string} imageId The imageId associated with this dicom image
- * @param {Int16Array} pixelData Pixel data array of DICOM image
+ * @param {Object} dicomData Data returned from DICOM response
+ * @param {ArrayBuffer} dicomData.pixelData Raw multipart pixel data
+ * @param {string} dicomData.boundary Multipart response boundary
  * @param {Object.<string, object>=} _metaData Optional metaData to
  *    pass instead of using stored metaData, this allows Webworkers
  *    to pass in a metaData object
  * @return {Object} Cornerstone image object
  */
-const createImageObjectFromDicom = (imageId, pixelData, _metaData) => {
+const createImageObjectFromDicom = (imageId, dicomData, _metaData) => {
   // Retrieve metaData for this instance
   const metaData = _metaData ? _metaData : metaDataDict[imageId];
+
+  // Parse multipart header and boundary from arrayBuffer and
+  // get transfer syntax
+  const multipartData = parseMultipart(
+      dicomData.pixelData,
+      dicomData.boundary,
+  );
+  // Parse pixel data from raw bytes
+  const pixelData = decodePixelData(
+      multipartData.arrayBuffer,
+      multipartData.transferSyntax,
+      metaData,
+  );
 
   const height = metaData[DICOM_TAGS.NUM_ROWS];
   const width = metaData[DICOM_TAGS.NUM_COLUMNS];

@@ -7,6 +7,7 @@ import {IMAGE_LOADER_PREFIX} from '../config.js';
 const defaultConfig = {
   useWebworkersToFetch: false,
   useWebworkersToParse: false,
+  transferSyntax: '1.2.840.10008.1.2.1',
 };
 const config = Object.assign({}, defaultConfig);
 const workerManager = new DicomWorkerManager();
@@ -19,6 +20,8 @@ let onImageFetch = () => {};
  *    should be used to fetch requests
  * @param {boolean=} newConfig.useWebworkersToParse Whether or not webworkers
  *    should be used to create image objects from dicom
+ * @param {string=} newConfig.transferSyntax Transfer syntax to use for fetching
+ *    DICOM pixel data
  */
 const configure = (newConfig) => {
   Object.assign(config, defaultConfig, newConfig);
@@ -56,21 +59,21 @@ const loadImage = (imageId) => {
 
     // Fetch with or without webworkers
     if (config.useWebworkersToFetch) {
-      fetchDicomPromise = workerManager.fetchDicom(url);
+      fetchDicomPromise = workerManager.fetchDicom(url, config.transferSyntax);
     } else {
-      fetchDicomPromise = api.fetchDicomFile(url);
+      fetchDicomPromise = api.fetchDicomFile(url, config.transferSyntax);
     }
 
-    fetchDicomPromise.then((pixelData) => {
+    fetchDicomPromise.then((dicomData) => {
       onImageFetch();
 
       // Create cornerstone image object with or without webworkers
       if (config.useWebworkersToParse) {
-        workerManager.createImage(imageId, pixelData).then((image) => {
+        workerManager.createImage(imageId, dicomData).then((image) => {
           resolve(image);
         }).catch((error) => reject(error));
       } else {
-        const image = createImageObjectFromDicom(imageId, pixelData);
+        const image = createImageObjectFromDicom(imageId, dicomData);
         resolve(image);
       }
     }).catch((error) => reject(error));

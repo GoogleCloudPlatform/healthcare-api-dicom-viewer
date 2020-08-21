@@ -90,10 +90,13 @@ class DicomWorkerManager {
   /**
    * Uses a worker to fetch a dicom file
    * @param {string} url Url to fetch
+   * @param {string=} transferSyntax Transfer syntax to use
    * @return {Promise<Uint8Array>} Promise that returns byte array of dicom file
    */
-  fetchDicom(url) {
+  fetchDicom(url, transferSyntax) {
     return new Promise((resolve, reject) => {
+      transferSyntax = transferSyntax ? transferSyntax : '1.2.840.10008.1.2.1';
+
       const worker = this.getNextWorker();
 
       // Store resolve/reject functions to use once task is finished
@@ -106,6 +109,7 @@ class DicomWorkerManager {
       worker.worker.postMessage({
         task: 'fetchDicom',
         url,
+        transferSyntax,
         accessToken: Auth.getAccessToken(),
       });
       worker.activeTasks++;
@@ -116,10 +120,12 @@ class DicomWorkerManager {
    * Uses a worker to parse a dicom file and create an image
    * object
    * @param {string} imageId ImageID for this dicom image
-   * @param {Int16Array} pixelData Pixel data of dicom file
+   * @param {Object} dicomData Data returned from DICOM response
+   * @param {ArrayBuffer} dicomData.pixelData Raw multipart pixel data
+   * @param {string} dicomData.boundary Multipart response boundary
    * @return {Promise<Object>} Cornerstone image object
    */
-  createImage(imageId, pixelData) {
+  createImage(imageId, dicomData) {
     return new Promise((resolve, reject) => {
       const worker = this.getNextWorker();
 
@@ -132,7 +138,7 @@ class DicomWorkerManager {
       // Instruct worker to complete createImage task
       worker.worker.postMessage({
         task: 'createImage',
-        pixelData,
+        dicomData,
         imageId,
       });
       worker.activeTasks++;
@@ -152,7 +158,7 @@ class DicomWorkerManager {
       return;
     }
 
-    fetchDicomTask.resolve(data.pixelData);
+    fetchDicomTask.resolve(data.dicomData);
   }
 
   /**

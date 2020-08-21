@@ -2,8 +2,7 @@
 
 /** Content type to use for fetching DICOM files */
 const DICOM_CONTENT_TYPE = 'multipart/related;' +
-    'type="application/octet-stream";' +
-    'transfer-syntax=1.2.840.10008.1.2.1';
+    'type="application/octet-stream";';
 
 const DICOM_TAGS = {
   STUDY_UID: '0020000D',
@@ -18,6 +17,8 @@ const DICOM_TAGS = {
   MIN_PIXEL_VAL: '00280106',
   MAX_PIXEL_VAL: '00280107',
   NUM_FRAMES: '00280008',
+  BITS_ALLOCATED: '00280100',
+  PIXEL_REPRESENTATION: '00280103',
 };
 
 export {

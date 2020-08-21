@@ -5,12 +5,12 @@ import createImageObjectFromDicom from '../createImageObject.js';
  * @type {Object.<string, object>} */
 let metaDataDict = {};
 
-const fetchDicom = (url) => {
-  api.fetchDicomFile(url)
-      .then((pixelData) => {
+const fetchDicom = (url, transferSyntax) => {
+  api.fetchDicomFile(url, transferSyntax)
+      .then((dicomData) => {
         self.postMessage({
           task: 'fetchDicom',
-          pixelData,
+          dicomData,
           url,
         });
       })
@@ -27,11 +27,12 @@ const setMetaData = (metaData) => {
   metaDataDict = metaData;
 };
 
-const createImage = (imageId, pixelData) => {
+const createImage = (imageId, dicomData) => {
   const image =
-      createImageObjectFromDicom(imageId, pixelData, metaDataDict[imageId]);
+      createImageObjectFromDicom(imageId, dicomData, metaDataDict[imageId]);
   // Functions cannot be transferred, so delete getPixelData and add it back on
   // the main thread
+  const pixelData = image.getPixelData();
   delete image.getPixelData;
   self.postMessage({
     task: 'createImage',
@@ -50,12 +51,12 @@ self.addEventListener('message', (event) => {
   if (event.data.task) {
     switch (event.data.task) {
       case 'fetchDicom':
-        fetchDicom(event.data.url);
+        fetchDicom(event.data.url, event.data.transferSyntax);
         break;
       case 'createImage':
         createImage(
             event.data.imageId,
-            event.data.pixelData,
+            event.data.dicomData,
         );
         break;
       case 'setMetaData':
