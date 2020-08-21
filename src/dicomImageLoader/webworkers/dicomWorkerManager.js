@@ -169,6 +169,11 @@ class DicomWorkerManager {
     const createImageTask = this.createImageTasks[data.imageId];
     delete this.createImageTasks[data.imageId];
 
+    if (data.error) {
+      createImageTask.reject(data.error);
+      return;
+    }
+
     const image = data.image;
     const getPixelData = () => data.pixelData;
     image.getPixelData = getPixelData;

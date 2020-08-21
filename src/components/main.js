@@ -374,7 +374,12 @@ export default function Main() {
           dataset={datasets.selected}
           dicomStore={dicomStores.selected}
           study={studies.selected}
-          series={series.selected} /> : null}
+          series={series.selected}
+          onError={(msg) => {
+            setErrorMessage(msg);
+            setErrorModalOpen(true);
+          }}
+        /> : null}
       <Dialog
         open={errorModalOpen}
         onClose={() => setErrorModalOpen(false)}

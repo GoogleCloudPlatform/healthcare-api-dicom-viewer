@@ -27,6 +27,7 @@ export default class Viewer extends React.Component {
    * @param {string} props.dicomStore Dicom Store
    * @param {Object} props.study Study
    * @param {Object} props.series Series
+   * @param {function(string)} props.onError Triggers an error modal
    */
   constructor(props) {
     super(props);
@@ -115,6 +116,26 @@ export default class Viewer extends React.Component {
   }
 
   /**
+   * Runs when the DicomImageSequencer recieves an error
+   * @param {Error} error
+   */
+  onError(error) {
+    this.props.onError(error.message);
+    clearInterval(this.metricsIntervalId);
+    this.setState({
+      renderTimer: 0,
+      totalTimer: 0,
+      fetchTime: 0,
+      numReadyImages: 0,
+      readyImagesProgress: 0,
+      numRenderedImages: 0,
+      renderedImagesProgress: 0,
+      timeToFirstImage: 0,
+      isDisplaying: false,
+    });
+  }
+
+  /**
    * Runs when an image has been rendered to the cornerstone canvas
    */
   onImageRendered() {
@@ -195,7 +216,10 @@ export default class Viewer extends React.Component {
         this.state.maxSimultaneousRequests;
     this.dicomSequencer.setInstances(this.state.instances);
     this.totalImagesCount =
-        this.dicomSequencer.fetchInstances((image) => this.onImageReady(image));
+        this.dicomSequencer.fetchInstances(
+            (image) => this.onImageReady(image),
+            (error) => this.onError(error),
+        );
 
     // Set up an interval for updating metrics (10 times per second)
     this.metricsIntervalId = setInterval(() => this.updateMetrics(), 100);
@@ -383,4 +407,5 @@ Viewer.propTypes = {
   dicomStore: PropTypes.string.isRequired,
   study: PropTypes.object.isRequired,
   series: PropTypes.object.isRequired,
+  onError: PropTypes.func.isRequired,
 };

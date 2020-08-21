@@ -28,18 +28,26 @@ const setMetaData = (metaData) => {
 };
 
 const createImage = (imageId, dicomData) => {
-  const image =
-      createImageObjectFromDicom(imageId, dicomData, metaDataDict[imageId]);
-  // Functions cannot be transferred, so delete getPixelData and add it back on
-  // the main thread
-  const pixelData = image.getPixelData();
-  delete image.getPixelData;
-  self.postMessage({
-    task: 'createImage',
-    imageId,
-    image,
-    pixelData,
-  });
+  try {
+    const image =
+        createImageObjectFromDicom(imageId, dicomData, metaDataDict[imageId]);
+    // Functions cannot be transferred, so delete getPixelData and
+    // add it back on the main thread
+    const pixelData = image.getPixelData();
+    delete image.getPixelData;
+    self.postMessage({
+      task: 'createImage',
+      imageId,
+      image,
+      pixelData,
+    });
+  } catch (error) {
+    self.postMessage({
+      task: 'createImage',
+      error,
+      imageId,
+    });
+  }
 };
 
 self.addEventListener('message', (event) => {
