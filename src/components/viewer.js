@@ -267,7 +267,7 @@ export default class Viewer extends React.Component {
                         (this.state.renderTimer / 1000)).toFixed(2)}
           </Typography>
           <Typography variant="body">
-            Use your browser&apos;s developer tools to see bandwith usage.
+            Use your browser&apos;s developer tools to see bandwidth usage.
           </Typography>
         </Box>
       </Box>
