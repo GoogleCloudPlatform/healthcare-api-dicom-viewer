@@ -141,4 +141,14 @@ export default class DicomImageSequencer {
       }
     }
   }
+
+  /**
+   * Cancels any currently running operations by clearing queues
+   *    and removing any cached images
+   */
+  cancel() {
+    this.instanceQueue = [];
+    this.loadedImages = {};
+    this.fetchQueue = [];
+  }
 }
