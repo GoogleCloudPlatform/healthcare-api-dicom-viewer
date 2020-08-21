@@ -18,7 +18,7 @@ const useStyles = makeStyles((theme) => ({
  * @param {number} props.items[].index
  * @param {string} props.searchQuery Search query to filter with
  * @param {function(string): *} props.onClickItem Function to run when
- *   user clicks an item
+ *    user clicks an item
  * @param {number} props.maxDisplayAmount Max number of items to render
  * @return {ReactElement} <FilterItems/>
  */
@@ -60,7 +60,7 @@ function FilterItems({items, searchQuery, onClickItem, maxDisplayAmount}) {
  * @param {Object} props
  * @param {string[]} props.items Array of items to display
  * @param {function(string): *} props.onClickItem Function to run when
- *   user clicks an item
+ *    user clicks an item
  * @param {boolean} props.isLoading Whether or not data is still loading
  * @param {(function(string): *)=} props.onSearch Function to override search
  *    filtering with a separate api call for example
@@ -125,7 +125,7 @@ export default function SearchList({
   /**
    * Handles a change in search query
    * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} event
-   * onChange event
+   *    onChange event
    */
   const handleSearch = (event) => {
     event.persist();

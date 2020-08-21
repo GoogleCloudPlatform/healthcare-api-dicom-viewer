@@ -100,7 +100,7 @@ export default class DicomImageSequencer {
   /**
    * Checks if the next instance in the queue has been loaded
    * @param {onImageReady} onImageReady Runs if the next instance in the
-   * sequence is loaded
+   *    sequence is loaded
    */
   checkInstanceQueue(onImageReady) {
     while (this.instanceQueue.length > 0) {
@@ -126,7 +126,7 @@ export default class DicomImageSequencer {
   /**
    * Checks if a new fetch request is available to be sent out
    * @param {onImageReady} onImageReady Runs if the next instance in the
-   * sequence is loaded
+   *    sequence is loaded
    */
   checkFetchQueue(onImageReady) {
     // Calculate how many requests can be sent out
@@ -148,5 +148,15 @@ export default class DicomImageSequencer {
         });
       }
     }
+  }
+
+  /**
+   * Cancels any currently running operations by clearing queues
+   *    and removing any cached images
+   */
+  cancel() {
+    this.instanceQueue = [];
+    this.loadedImages = {};
+    this.fetchQueue = [];
   }
 }

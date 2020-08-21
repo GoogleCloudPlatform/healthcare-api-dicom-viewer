@@ -87,6 +87,9 @@ export default class Viewer extends React.Component {
    */
   componentWillUnmount() {
     this.getInstancesPromise.cancel();
+    this.dicomSequencer.cancel();
+    clearInterval(this.metricsIntervalId);
+    cornerstone.disable(this.canvasElement);
   }
 
   /**

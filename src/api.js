@@ -4,7 +4,7 @@ import {DICOM_CONTENT_TYPE} from './dicomValues.js';
 
 /**
  * Fetches a url using a stored access token, signing the user in
- * if no access token exists
+ *    if no access token exists
  * @param {RequestInfo} input The request info to fetch
  * @param {RequestInit=} init The request init object
  * @return {Promise<Response>} Fetch response object
@@ -200,7 +200,6 @@ const fetchMetadata =
  * @return {ArrayBuffer} Raw pixel data of DICOM P10 contents
  */
 const fetchDicomFile = async (url, transferSyntax) => {
-  // TODO(#10) Revisit using gzip without multipart headers once fix is launched
   // TODO(#11) Investigate optimal accept header for compressed instances
   transferSyntax = transferSyntax ? transferSyntax : '1.2.840.10008.1.2.1';
 
@@ -233,7 +232,7 @@ const fetchDicomFile = async (url, transferSyntax) => {
 
 /**
  * Turns a promise into a cancelable promise to avoid
- * setting state after component unmounts
+ *    setting state after component unmounts
  * @param {Promise} promise Promise to make cancelable
  * @return {CancelablePromise} The cancelable promise
  */
