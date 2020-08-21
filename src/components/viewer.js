@@ -266,6 +266,9 @@ export default class Viewer extends React.Component {
             Average FPS: {(this.state.numRenderedImages /
                         (this.state.renderTimer / 1000)).toFixed(2)}
           </Typography>
+          <Typography variant="body">
+            Use your browser&apos;s developer tools to see bandwith usage.
+          </Typography>
         </Box>
       </Box>
     );
