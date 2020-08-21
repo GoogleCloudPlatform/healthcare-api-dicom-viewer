@@ -103,7 +103,9 @@ export default class Viewer extends React.Component {
       this.setState({
         timeToFirstImage: Date.now() - this.fetchStartTime,
       });
-    } else if (this.renderedImagesCount == this.totalImagesCount) {
+    }
+
+    if (this.renderedImagesCount == this.totalImagesCount) {
       // When last image is rendered, stop the
       // metrics interval and run one final time
       clearInterval(this.metricsIntervalId);
