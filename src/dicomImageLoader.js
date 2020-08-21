@@ -100,7 +100,7 @@ const createImageObjectFromDicom = (imageId, pixelData) => {
  * Cornerstone image loader for viewing dicom files from Google Healthcare Api
  * @param {string} imageId Url for the dicom file
  * @return {{promise: Promise<Object>}} Object containing promise for
- * cornerstone
+ *    cornerstone
  */
 const loadImage = (imageId) => {
   const url = imageId.replace(IMAGE_LOADER_PREFIX, 'https');

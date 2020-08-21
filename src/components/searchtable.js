@@ -13,43 +13,27 @@ const useStyles = makeStyles((theme) => ({
 /**
  * React component for creating a list of items filtered using a search query
  * @param {Object} props
- * @param {Object[]} props.items Array of items to be filtered
- * @param {string} props.items[].value
- * @param {number} props.items[].index
+ * @param {string[] | Object[]} props.items Array of items to be filtered
  * @param {string} props.searchQuery Search query to filter with
  * @param {function(string): *} props.onClickItem Function to run when
- *    user clicks an item
+ *   user clicks an item
  * @param {number} props.maxDisplayAmount Max number of items to render
  * @return {ReactElement} <FilterItems/>
  */
 function FilterItems({items, searchQuery, onClickItem, maxDisplayAmount}) {
-  if (items.length == 0) {
-    return (
-      <ListItem>
-        <ListItemText
-          primary="No data to display." />
-      </ListItem>
-    );
-  }
-
   const filteredItems = items.filter((item) => {
-    return item.value.toLowerCase().includes(searchQuery.toLowerCase().trim());
+    if (typeof item == 'string') {
+      return item.toLowerCase().includes(searchQuery.toLowerCase().trim());
+    }
+    return item.displayValue.toLowerCase()
+        .includes(searchQuery.toLowerCase().trim());
   });
 
-  if (filteredItems.length == 0) {
+  return filteredItems.slice(0, maxDisplayAmount).map((item, index) => {
     return (
-      <ListItem>
+      <ListItem button key={index} onClick={() => onClickItem(item)}>
         <ListItemText
-          primary="No results found." />
-      </ListItem>
-    );
-  }
-
-  return filteredItems.slice(0, maxDisplayAmount).map((item) => {
-    return (
-      <ListItem button key={item.index} onClick={() => onClickItem(item.index)}>
-        <ListItemText
-          primary={item.value} />
+          primary={typeof item == 'string' ? item : item.displayValue} />
       </ListItem>
     );
   });
@@ -60,7 +44,7 @@ function FilterItems({items, searchQuery, onClickItem, maxDisplayAmount}) {
  * @param {Object} props
  * @param {string[]} props.items Array of items to display
  * @param {function(string): *} props.onClickItem Function to run when
- *    user clicks an item
+ *   user clicks an item
  * @param {boolean} props.isLoading Whether or not data is still loading
  * @param {(function(string): *)=} props.onSearch Function to override search
  *    filtering with a separate api call for example
@@ -68,7 +52,7 @@ function FilterItems({items, searchQuery, onClickItem, maxDisplayAmount}) {
  *    user stops typing in search bar to execute the search
  * @return {ReactElement} <SearchList />
  */
-export default function SearchList({
+export default function SearchTable({
   items,
   onClickItem,
   isLoading,
@@ -80,13 +64,6 @@ export default function SearchList({
   const [searchQuery, setSearchQuery] = useState('');
   const [maxDisplayAmount, setMaxDisplayAmount] = useState(50);
 
-  // Track the index of each item to retain accurate indexing even
-  // after items have been filtered
-  items = items.map((value, index) => ({
-    value,
-    index,
-  }));
-
   // On mount, set up up scroll events to load more results as user scrolls
   useEffect(() => {
     document.addEventListener('scroll', onScroll);
@@ -96,9 +73,6 @@ export default function SearchList({
     };
   }, []);
 
-  /**
-   * Runs when user scrolls page
-   */
   const onScroll = () => {
     // Check if search list bottom is visible on page
     const searchList = document.getElementById('search-list');
@@ -125,7 +99,7 @@ export default function SearchList({
   /**
    * Handles a change in search query
    * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} event
-   *    onChange event
+   * onChange event
    */
   const handleSearch = (event) => {
     event.persist();
@@ -154,8 +128,12 @@ export default function SearchList({
     </Box>
   );
 }
-SearchList.propTypes = {
-  items: PropTypes.arrayOf(PropTypes.string).isRequired,
+SearchTable.propTypes = {
+  items: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.string).isRequired,
+    PropTypes.arrayOf(PropTypes.shape({
+      displayValue: PropTypes.string.isRequired,
+    }))]).isRequired,
   onClickItem: PropTypes.func.isRequired,
   isLoading: PropTypes.bool.isRequired,
   onSearch: PropTypes.func,

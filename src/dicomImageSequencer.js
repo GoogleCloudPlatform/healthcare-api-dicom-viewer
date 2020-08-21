@@ -88,7 +88,7 @@ export default class DicomImageSequencer {
   /**
    * Checks if the next instance in the queue has been loaded
    * @param {onImageReady} onImageReady Runs if the next instance in the
-   * sequence is loaded
+   *    sequence is loaded
    */
   checkInstanceQueue(onImageReady) {
     while (this.instanceQueue.length > 0) {
@@ -114,7 +114,7 @@ export default class DicomImageSequencer {
   /**
    * Checks if a new fetch request is available to be sent out
    * @param {onImageReady} onImageReady Runs if the next instance in the
-   * sequence is loaded
+   *    sequence is loaded
    */
   checkFetchQueue(onImageReady) {
     // Calculate how many requests can be sent out
