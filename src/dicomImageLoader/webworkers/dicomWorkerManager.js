@@ -1,0 +1,185 @@
+import DicomWorker from './dicom.worker.js';
+import Auth from '../../auth.js';
+
+/**
+ * @typedef {Object} Worker
+ * @property {DicomWorker} worker
+ * @property {number} activeTasks
+ */
+
+/**
+ * Class for managing webworkers to perform tasks related to dicom
+ * fetching and parsing
+ */
+class DicomWorkerManager {
+  /**
+   * Creates a new DicomWorkerManager
+   * @param {number=} numWorkers Number of webworkers to use.
+   *    Defaults to number of logical processors in computer
+   */
+  constructor(numWorkers) {
+    /** @type {Worker[]} */
+    this.workers = [];
+    this.fetchDicomTasks = {};
+    this.createImageTasks = {};
+
+    if (!numWorkers) {
+      numWorkers = navigator.hardwareConcurrency;
+    }
+
+    // Initialize workers
+    for (let i = 0; i < numWorkers; i++) {
+      const newWorker = {
+        worker: new DicomWorker(),
+        activeTasks: 0,
+      };
+      newWorker.worker.onmessage = (event) => {
+        this.onWorkerMessage(event);
+        newWorker.activeTasks--;
+      };
+      this.workers.push(newWorker);
+    }
+  }
+
+  /**
+   * Event that is called when a worker sends a message
+   * @param {MessageEvent} event onMessage event
+   */
+  onWorkerMessage(event) {
+    switch (event.data.task) {
+      case 'fetchDicom':
+        this.handleFetchDicom(event.data);
+        break;
+      case 'createImage':
+        this.handleCreateImage(event.data);
+        break;
+    }
+  }
+
+  /**
+   * Returns the worker with the least amount of active tasks
+   * @return {Worker} worker object
+   */
+  getNextWorker() {
+    let nextWorker = this.workers[0];
+    if (nextWorker.activeTasks == 0) return nextWorker;
+    for (let i = 1; i < this.workers.length; i++) {
+      if (this.workers[i].activeTasks < nextWorker.activeTasks) {
+        nextWorker = this.workers[i];
+        if (nextWorker.activeTasks == 0) return nextWorker;
+      }
+    }
+
+    return nextWorker;
+  }
+
+  /**
+   * Sends a metadata dict to all webworkers for them
+   *    to use when creating image objects
+   * @param {Object.<string, object>} metaData
+   */
+  sendMetaDataToAllWebworkers(metaData) {
+    for (let i = 0; i < this.workers.length; i++) {
+      this.workers[i].worker.postMessage({
+        task: 'setMetaData',
+        metaData,
+      });
+    }
+  }
+
+  /**
+   * Uses a worker to fetch a dicom file
+   * @param {string} url Url to fetch
+   * @param {string=} transferSyntax Transfer syntax to use
+   * @return {Promise<Uint8Array>} Promise that returns byte array of dicom file
+   */
+  fetchDicom(url, transferSyntax) {
+    return new Promise((resolve, reject) => {
+      transferSyntax = transferSyntax ? transferSyntax : '1.2.840.10008.1.2.1';
+
+      const worker = this.getNextWorker();
+
+      // Store resolve/reject functions to use once task is finished
+      this.fetchDicomTasks[url] = {
+        resolve,
+        reject,
+      };
+
+      // Instruct worker to complete fetchDicom task
+      worker.worker.postMessage({
+        task: 'fetchDicom',
+        url,
+        transferSyntax,
+        accessToken: Auth.getAccessToken(),
+      });
+      worker.activeTasks++;
+    });
+  }
+
+  /**
+   * Uses a worker to parse a dicom file and create an image
+   * object
+   * @param {string} imageId ImageID for this dicom image
+   * @param {Object} dicomData Data returned from DICOM response
+   * @param {ArrayBuffer} dicomData.pixelData Raw multipart pixel data
+   * @param {string} dicomData.boundary Multipart response boundary
+   * @return {Promise<Object>} Cornerstone image object
+   */
+  createImage(imageId, dicomData) {
+    return new Promise((resolve, reject) => {
+      const worker = this.getNextWorker();
+
+      // Store resolve/reject functions to use once task is finished
+      this.createImageTasks[imageId] = {
+        resolve,
+        reject,
+      };
+
+      // Instruct worker to complete createImage task
+      worker.worker.postMessage({
+        task: 'createImage',
+        dicomData,
+        imageId,
+      });
+      worker.activeTasks++;
+    });
+  }
+
+  /**
+   * Handle the completion of a fetchDicom task from a webworker
+   * @param {Object} data Completed task data
+   */
+  handleFetchDicom(data) {
+    const fetchDicomTask = this.fetchDicomTasks[data.url];
+    delete this.fetchDicomTasks[data.url];
+
+    if (data.error) {
+      fetchDicomTask.reject(data.error);
+      return;
+    }
+
+    fetchDicomTask.resolve(data.dicomData);
+  }
+
+  /**
+   * Handle the completion of a createImage task from a webworker
+   * @param {Object} data Completed task data
+   */
+  handleCreateImage(data) {
+    const createImageTask = this.createImageTasks[data.imageId];
+    delete this.createImageTasks[data.imageId];
+
+    if (data.error) {
+      createImageTask.reject(data.error);
+      return;
+    }
+
+    const image = data.image;
+    const getPixelData = () => data.pixelData;
+    image.getPixelData = getPixelData;
+
+    createImageTask.resolve(image);
+  }
+}
+
+export default DicomWorkerManager;

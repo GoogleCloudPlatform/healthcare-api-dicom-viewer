@@ -1,7 +1,7 @@
 /** @module dicomImageLoader */
-import * as api from './api.js';
-import {DICOM_TAGS} from './dicomValues.js';
-import {IMAGE_LOADER_PREFIX} from './config.js';
+import {DICOM_TAGS} from '../dicomValues.js';
+import decodePixelData from './decodePixelData.js';
+import parseMultipart from '../parseMultipart.js';
 
 /** Stores metaData for each imageId
  * @type {Object.<string, object>} */
@@ -35,12 +35,30 @@ const setMetadata = (imageId, metaData) => {
 /**
  * Creates a cornerstone image object from metadata and pixel data
  * @param {string} imageId The imageId associated with this dicom image
- * @param {Int16Array} pixelData Pixel data array of DICOM image
+ * @param {Object} dicomData Data returned from DICOM response
+ * @param {ArrayBuffer} dicomData.pixelData Raw multipart pixel data
+ * @param {string} dicomData.boundary Multipart response boundary
+ * @param {Object.<string, object>=} _metaData Optional metaData to
+ *    pass instead of using stored metaData, this allows Webworkers
+ *    to pass in a metaData object
  * @return {Object} Cornerstone image object
  */
-const createImageObjectFromDicom = (imageId, pixelData) => {
+const createImageObjectFromDicom = (imageId, dicomData, _metaData) => {
   // Retrieve metaData for this instance
-  const metaData = metaDataDict[imageId];
+  const metaData = _metaData ? _metaData : metaDataDict[imageId];
+
+  // Parse multipart header and boundary from arrayBuffer and
+  // get transfer syntax
+  const multipartData = parseMultipart(
+      dicomData.pixelData,
+      dicomData.boundary,
+  );
+  // Parse pixel data from raw bytes
+  const pixelData = decodePixelData(
+      multipartData.arrayBuffer,
+      multipartData.transferSyntax,
+      metaData,
+  );
 
   const height = metaData[DICOM_TAGS.NUM_ROWS];
   const width = metaData[DICOM_TAGS.NUM_COLUMNS];
@@ -96,30 +114,5 @@ const createImageObjectFromDicom = (imageId, pixelData) => {
   return image;
 };
 
-/**
- * Cornerstone image loader for viewing dicom files from Google Healthcare Api
- * @param {string} imageId Url for the dicom file
- * @return {{promise: Promise<Object>}} Object containing promise for
- * cornerstone
- */
-const loadImage = (imageId) => {
-  const url = imageId.replace(IMAGE_LOADER_PREFIX, 'https');
-
-  const promise = new Promise((resolve, reject) => {
-    api.fetchDicomFile(url)
-        .then((byteArray) => {
-          const image = createImageObjectFromDicom(imageId, byteArray);
-          resolve(image);
-        })
-        .catch((error) => {
-          reject(error);
-        });
-  });
-
-
-  return {
-    promise,
-  };
-};
-
-export {loadImage, setMetadata};
+export default createImageObjectFromDicom;
+export {setMetadata, metaDataDict};

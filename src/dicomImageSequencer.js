@@ -1,12 +1,17 @@
 /** @module DicomImageSequencer */
 import * as cornerstone from 'cornerstone-core';
+import * as dicomImageLoader from './dicomImageLoader/dicomImageLoader.js';
 import {IMAGE_LOADER_PREFIX} from './config.js';
-import {setMetadata} from './dicomImageLoader.js';
 import {DICOM_TAGS} from './dicomValues.js';
+import {setMetadata} from './dicomImageLoader/dicomImageLoader.js';
 
 /**
  * @callback onImageReady
  * @param {Object} image
+ */
+/**
+ * @callback onError
+ * @param {Error} error
  */
 
 /**
@@ -57,9 +62,10 @@ export default class DicomImageSequencer {
    * Fetches and loads dicom images in sequential order
    * @param {onImageReady} onImageReady Runs when the next image in the
    *    sequence has loaded
+   * @param {onError} onError Runs if the image loader returns an error
    * @return {number} Total number of images to be displayed
    */
-  fetchInstances(onImageReady) {
+  fetchInstances(onImageReady, onError) {
     for (const instance of this.instances) {
       // Generate urls for individual frames to support multi-frame instances
       const numFrames = instance[DICOM_TAGS.NUM_FRAMES] ?
@@ -79,8 +85,19 @@ export default class DicomImageSequencer {
 
     const totalImages = this.instanceQueue.length;
 
+    // Check fetch queue after image loader finishes
+    // fetching each instance
+    dicomImageLoader.onFetch(() => {
+      this.currentSimultaneousRequests--;
+      this.checkFetchQueue(onImageReady, onError);
+    });
+
+    // Send the stored metadata to all webworkers for them to use
+    // when creating image objects
+    dicomImageLoader.sendMetaDataToAllWebworkers();
+
     // Begin making fetch requests
-    this.checkFetchQueue(onImageReady);
+    this.checkFetchQueue(onImageReady, onError);
 
     return totalImages;
   }
@@ -88,7 +105,7 @@ export default class DicomImageSequencer {
   /**
    * Checks if the next instance in the queue has been loaded
    * @param {onImageReady} onImageReady Runs if the next instance in the
-   * sequence is loaded
+   *    sequence is loaded
    */
   checkInstanceQueue(onImageReady) {
     while (this.instanceQueue.length > 0) {
@@ -114,9 +131,10 @@ export default class DicomImageSequencer {
   /**
    * Checks if a new fetch request is available to be sent out
    * @param {onImageReady} onImageReady Runs if the next instance in the
-   * sequence is loaded
+   *    sequence is loaded
+   * @param {onError} onError Runs if the image loader returns an error
    */
-  checkFetchQueue(onImageReady) {
+  checkFetchQueue(onImageReady, onError) {
     // Calculate how many requests can be sent out
     const availableRequests =
         this.maxSimultaneousRequests - this.currentSimultaneousRequests;
@@ -133,12 +151,21 @@ export default class DicomImageSequencer {
           // Store loaded image and check the instance queue
           this.loadedImages[image.imageId] = image;
           this.checkInstanceQueue(onImageReady);
-
-          // Make a new request available and check the fetch queue
-          this.currentSimultaneousRequests--;
-          this.checkFetchQueue(onImageReady);
+        }).catch((error) => {
+          this.cancel();
+          onError(error);
         });
       }
     }
+  }
+
+  /**
+   * Cancels any currently running operations by clearing queues
+   *    and removing any cached images
+   */
+  cancel() {
+    this.instanceQueue = [];
+    this.loadedImages = {};
+    this.fetchQueue = [];
   }
 }

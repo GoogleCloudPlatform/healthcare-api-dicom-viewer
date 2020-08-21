@@ -69,6 +69,13 @@ const onSignedInChanged = (callback) => {
  * @return {string} Access token (or null if none present)
  */
 const getAccessToken = () => {
+  if (typeof WorkerGlobalScope !== 'undefined' &&
+      self instanceof WorkerGlobalScope) {
+    // If called by a webworker, check if access token
+    // has been stored in global self
+    return self.accessToken;
+  }
+
   if (isSignedIn()) {
     return GoogleAuth.currentUser.get()
         .getAuthResponse().access_token;

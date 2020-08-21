@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import App from './App';
 
+// Run setup files
 import './cornerstonesetup.js';
 
 ReactDOM.render((

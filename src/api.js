@@ -1,11 +1,10 @@
 /** @module api */
 import Auth from './auth.js';
 import {DICOM_CONTENT_TYPE} from './dicomValues.js';
-import parseMultipart from './parseMultipart.js';
 
 /**
  * Fetches a url using a stored access token, signing the user in
- * if no access token exists
+ *    if no access token exists
  * @param {RequestInfo} input The request info to fetch
  * @param {RequestInit=} init The request init object
  * @return {Promise<Response>} Fetch response object
@@ -185,11 +184,11 @@ const fetchSeries =
 const fetchMetadata =
     async (projectId, location, dataset, dicomStore, studyId, seriesId) => {
   const data = await gapi.client.healthcare.projects.locations.datasets
-    .dicomStores.studies.series.retrieveMetadata({
-      parent: `projects/${projectId}/locations/${location}/` +
-      `datasets/${dataset}/dicomStores/${dicomStore}`,
-      dicomWebPath: `studies/${studyId}/series/${seriesId}/metadata`,
-    });
+      .dicomStores.studies.series.retrieveMetadata({
+        parent: `projects/${projectId}/locations/${location}/` +
+        `datasets/${dataset}/dicomStores/${dicomStore}`,
+        dicomWebPath: `studies/${studyId}/series/${seriesId}/metadata`,
+      });
 
   return data.result;
 };
@@ -197,25 +196,32 @@ const fetchMetadata =
 /**
  * Fetches a dicom file from a given url using Google Authentication
  * @param {string} url Url for the dicom file
- * @return {Uint8Array} Byte array of DICOM P10 contents
+ * @param {string=} transferSyntax Transfer syntax to use
+ * @return {ArrayBuffer} Raw pixel data of DICOM P10 contents
  */
-const fetchDicomFile = async (url) => {
-  // TODO(#10) Revisit using gzip without multipart headers once fix is launched
+const fetchDicomFile = async (url, transferSyntax) => {
   // TODO(#11) Investigate optimal accept header for compressed instances
+  transferSyntax = transferSyntax ? transferSyntax : '1.2.840.10008.1.2.1';
+
   const response = await authenticatedFetch(url, {
     headers: {
-      'Accept': DICOM_CONTENT_TYPE,
+      'Accept': DICOM_CONTENT_TYPE + `transfer-syntax=${transferSyntax}`,
     },
   });
 
-  // Get the content-type header to find the boundary string
-  const contentTypeHeader = response.headers.get('content-type');
-  // Parse the contentTypeHeader and remove the "boundary=" prefix
-  const boundary = contentTypeHeader.split(';')[1].substring(10);
-  // Parse multipart header and boundary from arrayBuffer
-  const arrayBuffer = parseMultipart(await response.arrayBuffer(), boundary);
+  // Get the content-type header and split it to get individual parts
+  const contentTypeHeaders = response.headers.get('content-type').split(';');
 
-  return new Int16Array(arrayBuffer);
+  // Get boundary from contentTypeHeader and remove the "boundary=" prefix
+  const boundary = contentTypeHeaders[1].substring(10);
+
+  // Get an array buffer of bytes from the response object
+  const arrayBuffer = await response.arrayBuffer();
+
+  return {
+    pixelData: arrayBuffer,
+    boundary,
+  };
 };
 
 /**
@@ -226,7 +232,7 @@ const fetchDicomFile = async (url) => {
 
 /**
  * Turns a promise into a cancelable promise to avoid
- * setting state after component unmounts
+ *    setting state after component unmounts
  * @param {Promise} promise Promise to make cancelable
  * @return {CancelablePromise} The cancelable promise
  */
