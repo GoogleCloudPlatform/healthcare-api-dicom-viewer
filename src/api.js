@@ -197,7 +197,7 @@ const fetchMetadata =
 /**
  * Fetches a dicom file from a given url using Google Authentication
  * @param {string} url Url for the dicom file
- * @return {Uint8Array} Byte array of DICOM P10 contents
+ * @return {Int16Array} Pixel data array of DICOM P10 contents
  */
 const fetchDicomFile = async (url) => {
   // TODO(#11) Investigate optimal accept header for compressed instances
