@@ -65,7 +65,6 @@ export default class Viewer extends React.Component {
     cornerstone.enable(this.canvasElement);
     this.canvasElement.addEventListener('cornerstoneimagerendered',
         () => this.onImageRendered());
-    this.getInstances();
   }
 
   /**
@@ -148,9 +147,26 @@ export default class Viewer extends React.Component {
   }
 
   /**
-   * Resets variables and begins fetching dicom images in sequence
+   * Begins fetching dicom images in sequence
    */
   startDisplayingInstances() {
+    // Purge cornerstone cache
+    cornerstone.imageCache.purgeCache();
+
+    // Initialize dicomSequencer and begin fetching
+    this.dicomSequencer.maxSimultaneousRequests =
+        this.state.maxSimultaneousRequests;
+    this.dicomSequencer.setInstances(this.state.instances);
+    this.totalImagesCount =
+        this.dicomSequencer.fetchInstances((image) => this.onImageReady(image));
+  }
+
+  /**
+   * Retrieves a list of dicom instances in this series and then starts
+   *    fetching images
+   */
+  getInstances() {
+    // Reset metrics
     this.newSequence = true;
     this.renderedImagesCount = 0;
     this.readyImages = [];
@@ -168,24 +184,11 @@ export default class Viewer extends React.Component {
       isDisplaying: true,
     });
 
-    // Purge cornerstone cache
-    cornerstone.imageCache.purgeCache();
-
-    // Initialize dicomSequencer and begin fetching
-    this.dicomSequencer.maxSimultaneousRequests =
-        this.state.maxSimultaneousRequests;
-    this.dicomSequencer.setInstances(this.state.instances);
-    this.totalImagesCount =
-        this.dicomSequencer.fetchInstances((image) => this.onImageReady(image));
-
     // Set up an interval for updating metrics (10 times per second)
     this.metricsIntervalId = setInterval(() => this.updateMetrics(), 100);
-  }
 
-  /**
-   * Retrieves a list of dicom instances in this series
-   */
-  getInstances() {
+    // Create a cancelable promise to allow this request to be cancelled
+    // if the component is unmounted
     this.getInstancesPromise = api.makeCancelable(
         api.fetchMetadata(
             this.props.project, this.props.location,
@@ -195,11 +198,13 @@ export default class Viewer extends React.Component {
         ),
     );
 
+    // Fetch instances and then start displaying
     this.getInstancesPromise.promise
         .then((instances) => {
           this.setState({
             instances,
           });
+          this.startDisplayingInstances();
         })
         .catch((reason) => {
           if (!reason.isCanceled) {
@@ -241,9 +246,8 @@ export default class Viewer extends React.Component {
           <Button
             variant="contained"
             color="primary"
-            disabled={this.state.instances.length == 0 ||
-                this.state.isDisplaying}
-            onClick={() => this.startDisplayingInstances()}>
+            disabled={this.state.isDisplaying}
+            onClick={() => this.getInstances()}>
               Start
           </Button>
         </Box>
@@ -265,6 +269,9 @@ export default class Viewer extends React.Component {
           <Typography variant="h5">
             Average FPS: {(this.state.numRenderedImages /
                         (this.state.renderTimer / 1000)).toFixed(2)}
+          </Typography>
+          <Typography variant="body1">
+            Use your browser&apos;s developer tools to see bandwidth usage.
           </Typography>
         </Box>
       </Box>
