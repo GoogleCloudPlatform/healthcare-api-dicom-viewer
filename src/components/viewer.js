@@ -9,6 +9,8 @@ import * as api from '../api.js';
 import {DICOM_TAGS} from '../dicomValues.js';
 import DicomImageSequencer from '../dicomImageSequencer.js';
 
+let counter = 0;
+
 /**
  * React Component for viewing medical images
  */
@@ -71,7 +73,9 @@ export default class Viewer extends React.Component {
    * Cancel ongoing fetches to avoid state change after unmount
    */
   componentWillUnmount() {
-    this.getInstancesPromise.cancel();
+    if (this.getInstancesPromise) {
+      this.getInstancesPromise.cancel();
+    }
     this.dicomSequencer.cancel();
     clearInterval(this.metricsIntervalId);
     cornerstone.disable(this.canvasElement);
