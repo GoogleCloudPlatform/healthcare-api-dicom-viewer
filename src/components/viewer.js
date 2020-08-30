@@ -9,8 +9,6 @@ import * as api from '../api.js';
 import {DICOM_TAGS} from '../dicomValues.js';
 import DicomImageSequencer from '../dicomImageSequencer.js';
 
-let counter = 0;
-
 /**
  * React Component for viewing medical images
  */
