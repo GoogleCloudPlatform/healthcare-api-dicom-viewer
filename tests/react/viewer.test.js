@@ -83,22 +83,6 @@ api.fetchMetadata.mockResolvedValue([
 // fetchDicomFile will mock 9 "pixel values" for a fake 3x3 dicom image
 api.fetchDicomFile.mockResolvedValue(new Int16Array([1, 2, 3, 4, 5, 6, 7, 8, 9]));
 
-test('Start button is disabled until instance metadata is fetched', async () => {
-  render(
-      <Viewer
-        project="project"
-        location="location"
-        dataset="dataset"
-        dicomStore="dicomStore"
-        study={{[DICOM_TAGS.STUDY_UID]: {Value: ['study-uid']}}}
-        series={{[DICOM_TAGS.SERIES_UID]: {Value: ['series-uid']}}} />,
-  );
-
-  // Ensure start button is disabled and eventually becomes enabled
-  expect(screen.getByRole('button')).toHaveAttribute('disabled');
-  await waitFor(() => expect(screen.getByRole('button')).not.toHaveAttribute('disabled'));
-});
-
 test('Instances/frames display in correct order', async (done) => {
   const correctImageOrder = [
     {uid: 'instance1-UID', frame: '1'},
@@ -146,7 +130,6 @@ test('Instances/frames display in correct order', async (done) => {
         series={{[DICOM_TAGS.SERIES_UID]: {Value: ['series-uid']}}} />,
   );
 
-  // Wait for start button to be enabled and then click it
-  await waitFor(() => expect(screen.getByRole('button')).not.toHaveAttribute('disabled'));
+  // Click start button to begin fetching
   fireEvent.click(screen.getByRole('button'));
 });

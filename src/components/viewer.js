@@ -87,7 +87,9 @@ export default class Viewer extends React.Component {
    * Cancel ongoing fetches to avoid state change after unmount
    */
   componentWillUnmount() {
-    this.getInstancesPromise.cancel();
+    if (this.getInstancesPromise) {
+      this.getInstancesPromise.cancel();
+    }
     this.dicomSequencer.cancel();
     clearInterval(this.metricsIntervalId);
     cornerstone.disable(this.canvasElement);
