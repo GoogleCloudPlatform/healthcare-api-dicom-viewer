@@ -43,7 +43,7 @@
     "@babel/preset-react": "^7.10.1",
     "@testing-library/jest-dom": "^5.10.1",
     "@testing-library/react": "^10.4.2",
-    "babel-jest": "^26.1.0",
+    "babel-jest": "^29.7.0",
     "babel-loader": "^8.1.0",
     "babel-polyfill": "^6.26.0",
     "canvas": "^2.6.1",
@@ -51,11 +51,11 @@
     "eslint": "^7.2.0",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-react": "^7.20.0",
-    "jest": "^26.1.0",
+    "jest": "^29.7.0",
     "jsdoc": "^3.6.4",
     "style-loader": "^1.2.1",
-    "webpack": "^4.43.0",
-    "webpack-cli": "^3.3.11",
-    "webpack-dev-server": "^3.11.0"
+    "webpack": "^5.92.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.0.4"
   }
 }
